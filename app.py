@@ -39,4 +39,4 @@ def index():
 @app.route("/login")
 def login():
 
-    return apology("TODO_LOGIN")
+    return render_template("login.html")
