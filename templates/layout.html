@@ -60,14 +60,14 @@
                             <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
                             <form action="/login" method="post">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="login_username" placeholder="Username"
-                                        autocomplete="off" name="username">
-                                    <label for="login_username">Username</label>
+                                    <input type="username" class="form-control" id="lusername" placeholder="Username"
+                                        autocomplete="off" name="login_username">
+                                    <label for="lusername">Username</label>
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="login_password"
-                                        placeholder="Password" autocomplete="off" name="password">
-                                    <label for="login_password">Password</label>
+                                    <input type="password" class="form-control" id="lpassword" placeholder="Password"
+                                        autocomplete="off" name="login_password">
+                                    <label for="lpassword">Password</label>
                                 </div>
                                 <div>
                                     <button type="submit" class="btn btn-primary">Log In</button>
@@ -89,19 +89,19 @@
                             <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
                             <form action="/register" method="post">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="register_username"
-                                        placeholder="Username" autocomplete="off" name="username">
-                                    <label for="register_username">Username</label>
+                                    <input type="username" class="form-control" id="rusername" placeholder="Username"
+                                        autocomplete="off" name="register_username">
+                                    <label for="rusername">Username</label>
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="register_password"
-                                        placeholder="Password" autocomplete="off" name="password">
-                                    <label for="register_password">Password</label>
+                                    <input type="password" class="form-control" id="rpassword" placeholder="Password"
+                                        autocomplete="off" name="register_password">
+                                    <label for="rpassword">Password</label>
                                 </div>
                                 <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="register_confirmation"
-                                        placeholder="Confirm Password" autocomplete="off" name="confirmation">
-                                    <label for="register_confirmation">Confirm Password</label>
+                                    <input type="password" class="form-control" id="rconfirmation"
+                                        placeholder="Confirm Password" autocomplete="off" name="register_confirmation">
+                                    <label for="rconfirmation">Confirm Password</label>
                                 </div>
                                 <div>
                                     <button type="submit" class="btn btn-primary">Sign Up</button>
@@ -115,21 +115,37 @@
     </div>
     {% endif %}
 
-    {% if get_flashed_messages() %}
+    {% if get_flashed_messages() and not session["user_id"] %}
+    <!--Unsuccessful in red message-->
     <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
     <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
     <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
-        <div id="liveToast" class="toast" role="alert">
+        <div class="toast flashbox" role="alert">
             <div class="toast-body p-0">
                 <div class="alert alert-danger m-0" role="alert">
-                    {{ get_flashed_messages() }}
+                    {{ get_flashed_messages() | join(" ") }}
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        new bootstrap.Toast(document.querySelector("#liveToast")).show();
+        new bootstrap.Toast(document.querySelector(".flashbox")).show();
+    </script>
+    {% elif get_flashed_messages() and session["user_id"] %}
+    <!--Success in green message-->
+    <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
+        <div class="toast flashbox" role="alert">
+            <div class="toast-body p-0">
+                <div class="alert alert-success m-0" role="alert">
+                    {{ get_flashed_messages() | join(" ") }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new bootstrap.Toast(document.querySelector(".flashbox")).show();
     </script>
     {% endif %}
 
