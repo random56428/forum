@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function () {
         textarea.value = "";
 
         var str = `<hr>
-        <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
         <div class="post p-3">
             <div class="row p-2">
                 Name placeholder
