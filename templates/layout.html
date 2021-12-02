@@ -58,14 +58,15 @@
                         data-bs-parent="#accordionExample">
                         <div class="accordion-body">
                             <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
-                            <form>
+                            <form action="/login" method="post">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="login_username" placeholder="Usernames">
+                                    <input type="email" class="form-control" id="login_username" placeholder="Username"
+                                        autocomplete="off" name="username">
                                     <label for="login_username">Username</label>
                                 </div>
                                 <div class="form-floating mb-3">
                                     <input type="password" class="form-control" id="login_password"
-                                        placeholder="Password">
+                                        placeholder="Password" autocomplete="off" name="password">
                                     <label for="login_password">Password</label>
                                 </div>
                                 <div>
@@ -86,19 +87,20 @@
                         data-bs-parent="#accordionExample">
                         <div class="accordion-body">
                             <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
-                            <form>
+                            <form action="/register" method="post">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="register_username" placeholder="Usernames">
+                                    <input type="email" class="form-control" id="register_username"
+                                        placeholder="Username" autocomplete="off" name="username">
                                     <label for="register_username">Username</label>
                                 </div>
                                 <div class="form-floating mb-3">
                                     <input type="password" class="form-control" id="register_password"
-                                        placeholder="Password">
+                                        placeholder="Password" autocomplete="off" name="password">
                                     <label for="register_password">Password</label>
                                 </div>
                                 <div class="form-floating mb-3">
                                     <input type="password" class="form-control" id="register_confirmation"
-                                        placeholder="Password">
+                                        placeholder="Confirm Password" autocomplete="off" name="confirmation">
                                     <label for="register_confirmation">Confirm Password</label>
                                 </div>
                                 <div>
@@ -111,6 +113,24 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
+    {% if get_flashed_messages() %}
+    <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
+    <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
+    <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
+        <div id="liveToast" class="toast" role="alert">
+            <div class="toast-body p-0">
+                <div class="alert alert-danger m-0" role="alert">
+                    {{ get_flashed_messages() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new bootstrap.Toast(document.querySelector("#liveToast")).show();
+    </script>
     {% endif %}
 
     <!--d-flex justify-content-center-->
