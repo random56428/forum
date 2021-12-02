@@ -23,7 +23,19 @@
 
 <body>
 
-    <div class="container">
+    <!--https://getbootstrap.com/docs/5.1/components/navbar/-->
+    <nav class="navbar bg-transparent">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">Bootstrap</span>
+            {% if not session["user_id"] %}
+            <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight">Login/Register</a>
+            {% else %}
+            <a class="nav-link" href="/logout">Logout</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container mt-5">
         <div class="form-floating">
             <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea"
                 style="height: 100px"></textarea>
@@ -115,31 +127,22 @@
     </div>
     {% endif %}
 
-    {% if get_flashed_messages() and not session["user_id"] %}
+    {% if get_flashed_messages() %}
     <!--Unsuccessful in red message-->
     <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
     <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
     <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
         <div class="toast flashbox" role="alert">
             <div class="toast-body p-0">
+                {% if not session["user_id"] %}
                 <div class="alert alert-danger m-0" role="alert">
                     {{ get_flashed_messages() | join(" ") }}
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        new bootstrap.Toast(document.querySelector(".flashbox")).show();
-    </script>
-    {% elif get_flashed_messages() and session["user_id"] %}
-    <!--Success in green message-->
-    <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
-        <div class="toast flashbox" role="alert">
-            <div class="toast-body p-0">
+                {% else %}
                 <div class="alert alert-success m-0" role="alert">
                     {{ get_flashed_messages() | join(" ") }}
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

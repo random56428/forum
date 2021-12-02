@@ -121,4 +121,11 @@ def register():
     else:
         return redirect("/")
 
+@app.route("/logout")
+def logout():
 
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to login form
+    return redirect("/")
