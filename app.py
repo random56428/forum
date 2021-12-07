@@ -1,5 +1,5 @@
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
@@ -34,7 +34,9 @@ db = SQL("sqlite:///forum.db")
 @login_required
 def index():
 
-    return render_template("login.html")
+    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id")
+
+    return render_template("index.html", posts=posts)
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
@@ -47,32 +49,32 @@ def login():
         # Check if username is blank
         username = request.form.get("login_username")
         if not username:
-            flash("Username input is blank.")
+            flash("Username input is blank.", "danger")
             return render_template("login.html")
 
         # Check if password is blank
         password = request.form.get("login_password")
         if not password:
-            flash("Password input is blank.")
+            flash("Password input is blank.", "danger")
             return render_template("login.html")
         
         # Check if there is a username associated to request
         # Where rows will return list of length 1 if an account is found
         rows = db.execute("SELECT * FROM users WHERE username=?", username)
         if len(rows) != 1:
-            flash("The username or password is incorrect.")
+            flash("The username or password is incorrect.", "danger")
             return render_template("login.html")
 
         # Check if password matches db
         if not check_password_hash(rows[0]["hash"], password):
-            flash("The username or password is incorrect.")
+            flash("The username or password is incorrect.", "danger")
             return render_template("login.html")
         
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
-        flash("Successfully logged in.")
+        flash("Successfully logged in.", "success")
         return redirect("/")
     
     else:
@@ -86,25 +88,25 @@ def register():
         username = request.form.get("register_username")
 
         if not username:
-            flash("Username input is blank.")
-            return render_template("login.html")
+            flash("Username input is blank.", "danger")
+            return render_template("register.html")
         elif len(db.execute("SELECT * FROM users WHERE username=?", username)) != 0:
-            flash("Username already exists.")
-            return render_template("login.html")
+            flash("Username already exists.", "danger")
+            return render_template("register.html")
             
         password = request.form.get("register_password")
         confirmation = request.form.get("register_confirmation")
 
         # Check if password/confirmation is blank and if !=
         if not password:
-            flash("Password input is blank.")
-            return render_template("login.html")
+            flash("Password input is blank.", "danger")
+            return render_template("register.html")
         elif not confirmation:
-            flash("Confirmation password is blank.")
-            return render_template("login.html")
+            flash("Confirmation password is blank.", "danger")
+            return render_template("register.html")
         elif password != confirmation:
-            flash("Passwords do not match.")
-            return render_template("login.html")
+            flash("Passwords do not match.", "danger")
+            return render_template("register.html")
 
         # Register for user and insert into db
         db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", username, generate_password_hash(password))
@@ -116,16 +118,40 @@ def register():
         session["user_id"] = rows[0]["id"]
 
         # Redirect to home page
-        flash("Successfully registered.")
+        flash("Successfully registered.", "success")
         return redirect("/")
     else:
-        return redirect("/")
+        return render_template("register.html")
 
 @app.route("/logout")
 def logout():
 
     # Forget any user_id
-    session.clear()
+    session.clear() 
 
     # Redirect user to login form
     return redirect("/")
+
+@app.route("/newpost", methods=["GET", "POST"])
+@login_required
+def newpost():
+    if request.method == "POST":
+
+        title = request.form.get("title")
+        if not title:
+            flash("Title input is blank", "danger")
+            return render_template("newpost.html")
+        
+        text = request.form.get("text")
+        
+        db.execute("INSERT INTO posts (user_id, title, content, votes) VALUES (?, ?, ?, ?)", session["user_id"], title, text, 1)
+
+        return redirect("/")
+    else:
+        return render_template("newpost.html")
+
+@app.route("/post/<id>")
+def post(id):
+    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
+    comments = db.execute("SELECT comments.*, users.username FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
+    return render_template("post.html", posts=posts, comments=comments)

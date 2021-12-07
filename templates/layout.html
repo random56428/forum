@@ -13,149 +13,87 @@
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
 
-    {% block style %}{% endblock %}
-
-    <script src="./static/javascript.js"></script>
-
     <title>Forum</title>
 
+    {% block style %}{% endblock %}
+
+    <style>
+        .form-control:focus {
+            border-color: #000000;
+            box-shadow: none;
+        }
+
+        .btn:focus {
+            border-color: none;
+            box-shadow: none;
+        }
+
+        .navbar-btn {
+            background-color: rgba(0, 0, 0, 0);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 25px;
+            transition: 0.2s;
+        }
+
+        .navbar-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+    </style>
 </head>
 
-<body>
+<body style="background-color: #dae0e6;">
 
     <!--https://getbootstrap.com/docs/5.1/components/navbar/-->
-    <nav class="navbar bg-transparent">
-        <div class="container">
-            <span class="navbar-brand mb-0 h1">Bootstrap</span>
+    <nav class="navbar navbar-expand navbar-light bg-white sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand mb-0 h4" href="{{url_for('index')}}">Forum</a>
             {% if not session["user_id"] %}
-            <a class="nav-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight">Login/Register</a>
+            <div class="navbar-nav">
+                <div class="nav-item">
+                    <a class="btn px-3 navbar-btn" role="button" href="{{url_for('login')}}">Log in</a>
+                </div>
+                <div class="nav-item">
+                    <a class="btn px-3 ms-2 navbar-btn" role="button" href="{{url_for('register')}}">Sign up</a>
+                </div>
+            </div>
             {% else %}
-            <a class="nav-link" href="/logout">Logout</a>
+            <a class="btn px-3 navbar-btn" role="button" href="{{url_for('logout')}}">Logout</a>
             {% endif %}
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div class="form-floating">
-            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea"
-                style="height: 100px"></textarea>
-            <label for="floatingTextarea">Comments</label>
-            {% if not session["user_id"] %}
-            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvasRight">Send</button>
-            {% else %}
-            <button id="textareabutton" class="btn btn-outline-secondary" type="button">Button</button>
-            {% endif %}
-        </div>
-    </div>
-
-    {% if not session["user_id"] %}
-    <!--https://getbootstrap.com/docs/5.1/components/offcanvas/-->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel">
-        <div class="offcanvas-header">
-            <h5 id="offcanvasRightLabel">TODO</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <!--https://getbootstrap.com/docs/5.1/components/accordion/-->
-            <div class="accordion" id="accordionExample">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingOne">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            Login
-                        </button>
-                    </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
-                        data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                            <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
-                            <form action="/login" method="post">
-                                <div class="form-floating mb-3">
-                                    <input type="username" class="form-control" id="lusername" placeholder="Username"
-                                        autocomplete="off" name="login_username">
-                                    <label for="lusername">Username</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="lpassword" placeholder="Password"
-                                        autocomplete="off" name="login_password">
-                                    <label for="lpassword">Password</label>
-                                </div>
-                                <div>
-                                    <button type="submit" class="btn btn-primary">Log In</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingTwo">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            Register
-                        </button>
-                    </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                        data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                            <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
-                            <form action="/register" method="post">
-                                <div class="form-floating mb-3">
-                                    <input type="username" class="form-control" id="rusername" placeholder="Username"
-                                        autocomplete="off" name="register_username">
-                                    <label for="rusername">Username</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="rpassword" placeholder="Password"
-                                        autocomplete="off" name="register_password">
-                                    <label for="rpassword">Password</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="rconfirmation"
-                                        placeholder="Confirm Password" autocomplete="off" name="register_confirmation">
-                                    <label for="rconfirmation">Confirm Password</label>
-                                </div>
-                                <div>
-                                    <button type="submit" class="btn btn-primary">Sign Up</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
     <!--Unsuccessful in red message-->
     <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
     <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
-    <div class="toast-container position-absolute top-0 start-50 translate-middle-x p-3">
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x mt-3" onclick="hideToast()" style="z-index: 1050;">
         <div class="toast flashbox" role="alert">
             <div class="toast-body p-0">
-                {% if not session["user_id"] %}
-                <div class="alert alert-danger m-0" role="alert">
-                    {{ get_flashed_messages() | join(" ") }}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} m-0" role="alert">
+                    {{ message }}
                 </div>
-                {% else %}
-                <div class="alert alert-success m-0" role="alert">
-                    {{ get_flashed_messages() | join(" ") }}
-                </div>
-                {% endif %}
+                {% endfor %}
             </div>
         </div>
     </div>
 
     <script>
-        new bootstrap.Toast(document.querySelector(".flashbox")).show();
+        var toast = new bootstrap.Toast(document.querySelector(".flashbox"));
+        toast.show();
+        function hideToast() {
+            toast.hide();
+        }
     </script>
     {% endif %}
+    {% endwith %}
 
-    <!--d-flex justify-content-center-->
-    <main class="container p-5">
+    <main class="container mt-4">
         {% block main %}{% endblock %}
     </main>
+
+    {% block script %}{% endblock %}
 </body>
 
 </html>

@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block style %}
+<style>
+    .a-post {
+        border: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .a-post:hover {
+        border: 1px solid rgba(0, 0, 0, 0.7);
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block main %}
+
+<a role="button" class="container btn btn-primary mb-3" href="{{url_for('newpost')}}">NEW POST</a>
+
+{% for post in posts %}
+
+<div class="bg-white p-2 mb-3 rounded a-post">
+    <a id="openpost" href="{{url_for('post', id=post['post_id'])}}">Temp link</a>
+    <div class="row">
+        <div class="col-md-1 stretch order-md-first">TEST</div>
+        <div class="col order-sm-first order-first">
+            <div class="text-muted" style="font-size: small">
+                Posted by {{ post["username"] }}
+            </div>
+            <div class="h5 text-break">
+                {{ post["title"] }}
+            </div>
+            {% if (post["content"] | length) >= 200 %}
+            <div class="small text-box text-break"
+                style="mask-image: linear-gradient(white 60%, transparent); -webkit-mask-image: linear-gradient(white 60%, transparent);">
+                {{ post["content"][:(850-(post["title"] | length))] }}
+            </div>
+            {% else %}
+            <div class="small text-box text-break">
+                {{ post["content"][:(850-(post["title"] | length))] }}
+            </div>
+            {% endif %}
+            <div>
+                {{ post["votes"] }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

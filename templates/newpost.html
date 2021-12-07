@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<!--TODO: Add limit on number of characters in title-->
+<!--TODO: Add validators for client side-->
+<!--TODO: Add autoresizable to title area and text area-->
+<h5 class="mb-3">Create a post</h5>
+<hr style="border: 1px solid white">
+<div class="bg-white p-3 rounded">
+    <form action="{{url_for('newpost')}}" method="post">
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Title" name="title">
+        </div>
+        <div class="mb-3">
+            <textarea class="form-control" rows="6" placeholder="Text (optional)" name="text"></textarea>
+        </div>
+        <button type="submit" class="btn btn-outline-secondary">Post</button>
+    </form>
+</div>
+
+{% endblock %}
