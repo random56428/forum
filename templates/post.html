@@ -1,5 +1,44 @@
 {% extends "layout.html" %}
 
+<!--TODO: Add script link to static jquery.js-->
+{% block script %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    //TODO: python serverside check if datetime.now >= latest request on clicking button
+    //TODO: check if textarea is empty serverside
+    $(document).ready(function () {
+        // Enables comment button if there is text inside of comment text area
+        $("#commentarea").keyup(function() {
+            if ($(this).val() != "" && $("#commentbtn").prop("disabled")) {
+                $("#commentbtn").prop("disabled", false);
+            } else if ($(this).val() == "" && !$("#commentbtn").prop("disabled")){
+                $("#commentbtn").prop("disabled", true);
+            }
+        })
+        // Sends comment to server
+        $("#commentbtn").click(function() {
+            $.ajax({
+                type: "POST",
+                url: "{{url_for('newcomment')}}",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify({
+                    "text": $('#commentarea').val(),
+                }),
+                dataType: "json",
+                success: function(data){
+                    console.log(data);
+                    console.log("SUCCESS!");
+                },
+                error: function(e) {
+                    console.log(e);
+                    console.log("ERROR!");
+                }
+            });
+        })
+    })
+</script>
+{% endblock %}
+
 {% block main %}
 
 <div class="bg-white p-2 mb-3 rounded a-post">
@@ -21,24 +60,50 @@
             </div>
             {% endfor %}
         </div>
-    </div> 
-    <hr>
+    </div>
+</div>
+
+<div class="bg-white p-2 mb-3 rounded a-post">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col">
+            <textarea id="commentarea" class="form-control my-4" rows="5" placeholder="Place your comments here!"
+                name="PLACEHOLDER"></textarea>
+            <button id="commentbtn" class="btn btn-outline-secondary" disabled>Comment</button>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <hr width='82%'>
+    </div>
+
     {% for comment in comments %}
-    <div class="my-4 mx-2">
-        <div class="fw-bold" style="font-size: 12px">
-            {{ comment["username"] }}
-        </div>
-        <div class="text-box text-break">
-            {{ comment["comment"] }}
-        </div>
-        <div class="fw-bold" style="font-size: 11px">
-            {{ comment["votes"] }}
+    <div class="row">
+        <div class="col-md-1 stretch order-md-first"></div>
+        <div class="col my-4 mx-2 order-sm-first order-first">
+            <div class="fw-bold" style="font-size: 12px">
+                {{ comment["username"] }}
+            </div>
+            <div class="text-box text-break">
+                {{ comment["comment"] }}
+            </div>
+            <div class="fw-bold" style="font-size: 11px">
+                {{ comment["votes"] }}
+            </div>
         </div>
     </div>
     {% endfor %}
+    {% if not comments %}
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
+            No Comments Here
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+    {% endif %}
 </div>
-
-
 
 
 

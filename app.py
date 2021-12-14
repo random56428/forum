@@ -1,5 +1,5 @@
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
@@ -151,7 +151,15 @@ def newpost():
         return render_template("newpost.html")
 
 @app.route("/post/<id>")
+@login_required
 def post(id):
     posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
     comments = db.execute("SELECT comments.*, users.username FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
     return render_template("post.html", posts=posts, comments=comments)
+
+@app.route("/newcomment", methods=["POST"])
+@login_required
+def newcomment():
+    data = request.get_json()
+    print(data)
+    return data
