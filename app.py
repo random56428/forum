@@ -160,6 +160,12 @@ def post(id):
 @app.route("/newcomment", methods=["POST"])
 @login_required
 def newcomment():
-    data = request.get_json()
-    print(data)
-    return data
+    textarea = request.get_json()
+    db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, votes) VALUES (?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], 1)
+    username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
+    print(textarea)
+    textarea["username"] = username[0]["username"]
+    print(textarea)
+    # Return constructed information to form a comment
+    return textarea
+
