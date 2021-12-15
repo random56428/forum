@@ -30,11 +30,19 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///forum.db")
 
+# Gives username when signed in
+@app.context_processor
+def inject_user():
+    if "user_id" in session:
+        user_info = (db.execute("SELECT username FROM users WHERE id=?", session["user_id"]))[0]
+        return user_info
+    return dict()
+
 @app.route("/")
 @login_required
 def index():
-
-    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id")
+    # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
+    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
 
     return render_template("index.html", posts=posts)
 
@@ -161,11 +169,25 @@ def post(id):
 @login_required
 def newcomment():
     textarea = request.get_json()
+
+    # TODO: Check if textarea["text"] is empty, if empty, redirect to post id with flashed error message
+
+    # Check if comments count is zero to remove no comments label
+    count = (db.execute("SELECT COUNT(comment_id) FROM comments WHERE refpost_id=?", textarea["post_id"]))[0]["COUNT(comment_id)"]
+    if count != 0:
+        textarea["nocomments"] = "false"
+    else:
+        textarea["nocomments"] = "true"
+
     db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, votes) VALUES (?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], 1)
     username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
-    print(textarea)
     textarea["username"] = username[0]["username"]
-    print(textarea)
+
     # Return constructed information to form a comment
     return textarea
 
+@app.route("/profile/<user>")
+@login_required
+def profile(user):
+    # TODO: index homepage will use this func -> search any user's profile
+    return render_template("profile.html")

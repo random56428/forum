@@ -15,41 +15,62 @@
                 $("#commentbtn").prop("disabled", true);
             }
         })
-        // Sends comment to server
+        // Sends comment to server if textarea is not empty
         $("#commentbtn").click(function () {
-            // https://stackoverflow.com/questions/3730359/get-id-from-url-with-jquery
-            var url = window.location.pathname;
-            var id = url.substring(url.lastIndexOf('/') + 1);
-            $.ajax({
-                type: "POST",
-                url: "{{url_for('newcomment')}}",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({
-                    "text": $('#commentarea').val(),
-                    "post_id": id,
-                }),
-                dataType: "json",
-                success: function (data) {
-                    var str = ` <div class="row">
-                                    <div class="col-md-1 stretch order-md-first"></div>
-                                    <div class="col my-4 mx-2 order-sm-first order-first">
-                                        <div class="fw-bold" style="font-size: 12px">
-                                            ${data["username"]}
+            // Checks if comment area is not empty
+            if ($("#commentarea").val() != "") {
+                // https://stackoverflow.com/questions/3730359/get-id-from-url-with-jquery
+                var url = window.location.pathname;
+                var id = url.substring(url.lastIndexOf('/') + 1);
+                $.ajax({
+                    type: "POST",
+                    url: "{{url_for('newcomment')}}",
+                    contentType: "application/json; charset=UTF-8",
+                    data: JSON.stringify({
+                        "text": $('#commentarea').val(),
+                        "post_id": id,
+                    }),
+                    dataType: "json",
+                    beforeSend: function () {
+                        // Disables button, hides button text and adds a spinning wheel from Bootstrap
+                        $("#commentbtn").prop("disabled", true);
+                        $("#commentbtn > .spinner-border").removeClass("visually-hidden");
+                        $("#commentbtn > .btn-text").addClass("visually-hidden");
+                    },
+                    success: function (data) {
+                        // Remove no comment label if it exists
+                        if (data["nocomments"] == "true") {
+                            $(".nocomments").remove();
+                        }
+
+                        // Insert comment into html
+                        var str = ` <div class="row">
+                                        <div class="col-md-1 stretch order-md-first"></div>
+                                        <div class="col my-4 mx-2 order-sm-first order-first">
+                                            <div class="fw-bold" style="font-size: 12px">
+                                                ${data["username"]}
+                                            </div>
+                                            <div class="text-box text-break">
+                                                ${data["text"]}
+                                            </div>
+                                            <div class="fw-bold" style="font-size: 11px">
+                                                1
+                                            </div>
                                         </div>
-                                        <div class="text-box text-break">
-                                            ${data["text"]}
-                                        </div>
-                                        <div class="fw-bold" style="font-size: 11px">
-                                            1
-                                        </div>
-                                    </div>
-                                </div>`
-                    document.querySelector(".top-hr").insertAdjacentHTML('afterend', str);
-                },
-                error: function (e) {
-                    console.log(e);
-                }
-            });
+                                    </div>`
+                        document.querySelector(".top-hr").insertAdjacentHTML('afterend', str);
+                    },
+                    error: function (e) {
+                        console.log(e);
+                    },
+                    complete: function () {
+                        // Clears text area, removes spinning wheel and restore button text
+                        $("#commentarea").val("");
+                        $("#commentbtn > .spinner-border").addClass("visually-hidden");
+                        $("#commentbtn > .btn-text").removeClass("visually-hidden");
+                    }
+                });
+            }
         })
     })
 </script>
@@ -85,7 +106,10 @@
         <div class="col">
             <textarea id="commentarea" class="form-control my-4" rows="5" placeholder="Place your comments here!"
                 name="PLACEHOLDER"></textarea>
-            <button id="commentbtn" class="btn btn-outline-secondary" disabled>Comment</button>
+            <button id="commentbtn" class="btn btn-outline-secondary" disabled>
+                <span class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
+                <span class="btn-text">Comment</span>
+            </button>
         </div>
         <div class="col-md-1"></div>
     </div>
@@ -111,7 +135,7 @@
     </div>
     {% endfor %}
     {% if not comments %}
-    <div class="row">
+    <div class="row nocomments">
         <div class="col-md-4"></div>
         <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
             No Comments Here
@@ -120,7 +144,5 @@
     </div>
     {% endif %}
 </div>
-
-
 
 {% endblock %}

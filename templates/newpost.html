@@ -10,7 +10,7 @@
 <div class="bg-white p-3 rounded">
     <form action="{{url_for('newpost')}}" method="post">
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Title" name="title">
+            <input type="text" class="form-control" placeholder="Title" name="title" required>
         </div>
         <div class="mb-3">
             <textarea class="form-control" rows="6" placeholder="Text (optional)" name="text"></textarea>
