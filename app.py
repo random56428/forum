@@ -187,7 +187,46 @@ def newcomment():
     return textarea
 
 @app.route("/profile/<user>")
+@app.route("/profile/<user>/posts", endpoint="profile-posts")
+@app.route("/profile/<user>/comments", endpoint="profile-comments")
 @login_required
 def profile(user):
     # TODO: index homepage will use this func -> search any user's profile
-    return render_template("profile.html")
+    
+    # Check if user is valid
+    user_id = db.execute("SELECT id FROM users WHERE username=?", user)
+    if len(user_id) == 0:
+        flash("Username does not exist", "danger")
+        return redirect("/")
+    user_id = user_id[0]["id"]
+
+    if request.endpoint == "profile-posts":
+        # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
+        posts = db.execute("SELECT post_id, votes, title FROM posts WHERE user_id=? ORDER BY post_id DESC", user_id)
+        return render_template("profileposts.html", posts=posts, user=user)
+    elif request.endpoint == "profile-comments":
+        # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
+        # DEMO: SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
+        comments = db.execute("SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
+        return render_template("profilecomments.html", comments=comments, user=user)
+
+    # Endpoint is overview
+    # Calculate total reputation for given user
+    post_votes = db.execute("SELECT votes FROM posts WHERE user_id=?", user_id)
+    comment_votes = db.execute("SELECT votes FROM comments WHERE refuser_id=?", user_id)
+    post_count = db.execute("SELECT COUNT(votes) FROM posts WHERE user_id=?", user_id)
+    comment_count = db.execute("SELECT COUNT(votes) FROM comments WHERE refuser_id=?", user_id)
+    total_rep = 0
+    for post in post_votes:
+        total_rep += post["votes"]
+    for comment in comment_votes:
+        total_rep += comment["votes"]
+    total_rep -= (post_count[0]["COUNT(votes)"] + comment_count[0]["COUNT(votes)"])
+
+    # Calculate total post contributions
+    post_contribution = (db.execute("SELECT COUNT(*) FROM posts WHERE user_id=?", user_id))[0]["COUNT(*)"]
+
+    # Calculate total comment contributions
+    comment_contribution = (db.execute("SELECT COUNT(*) FROM comments WHERE refuser_id=?", user_id))[0]["COUNT(*)"]
+
+    return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user)

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block style %}
+<style>
+    .a-block {
+        margin-top: -1px;
+        position: relative;
+        border: 0.5px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .a-block:hover {
+        z-index: 1;
+        border: 1px solid rgba(0, 0, 0, 0.7) !important;
+        cursor: pointer;
+    }
+    
+</style>
+{% endblock %}
+
+{% block profilenavbar %}
+<nav class="navbar navbar-expand navbar-light bg-white border-bottom py-0">
+    <div class="container">
+        <div class="navbar-nav py-1" style="font-size: 14px;">
+            <a class="nav-link" href="{{url_for('profile', user=user)}}">OVERVIEW</a>
+            <a class="nav-link" href="{{url_for('profile-posts', user=user)}}">POSTS</a>
+            <a class="nav-link active" href="#">COMMENTS</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block main %}
+
+<div>
+    {% if comments %}
+    <div class="a-block bg-white p-2 text-break border" style="font-size: 11px;">
+        {{user}} <span class="text-muted">commented on {{ comments[0]["title"] }} &#183; Posted by {{
+            comments[0]["username"]
+            }}</span>
+    </div>
+    {% set ns = namespace(match=comments[0]["title"]) %}
+    {% endif %}
+    {% for comment in comments %}
+    {% if ns.match != comment["title"] %}
+    <div class="a-block bg-white p-2 text-break border mt-1" style="font-size: 11px;">
+        {{user}} <span class="text-muted">commented on {{ comment["title"] }} &#183; Posted by {{ comment["username"]
+            }}</span>
+    </div>
+    {% set ns.match = comment["title"] %}
+    {% endif %}
+    <div class="a-block bg-white p-2 text-break border">
+        <div class="row">
+            <div class="d-md-block d-none" style="width: 30px;"></div>
+            <div class="col">
+                <div style="font-size: 10.5px;">
+                    {{user}} {% if user == comment["username"] %} <span class="text-primary fw-bold">OP</span> {% endif
+                    %} <span class="text-muted">{{ comment["votes"] }} points</span>
+                </div>
+                <div style="font-size: 14px;">
+                    {{ comment["comment"] }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="m-4"></div>
+</div>
+
+{% if not comments %}
+<div class="row nocomments">
+    <div class="col-md-4"></div>
+    <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
+        @{{user}} hasn't commented anything
+    </div>
+    <div class="col-md-4"></div>
+</div>
+{% endif %}
+
+{% endblock %}

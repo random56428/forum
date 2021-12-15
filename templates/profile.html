@@ -3,10 +3,10 @@
 {% block profilenavbar %}
 <nav class="navbar navbar-expand navbar-light bg-white border-bottom py-0">
     <div class="container">
-        <div class="navbar-nav">
+        <div class="navbar-nav py-1" style="font-size: 14px;">
             <a class="nav-link active" href="#">OVERVIEW</a>
-            <a class="nav-link" href="#">POSTS</a>
-            <a class="nav-link" href="#">COMMENTS</a>
+            <a class="nav-link" href="{{url_for('profile-posts', user=user)}}">POSTS</a>
+            <a class="nav-link" href="{{url_for('profile-comments', user=user)}}">COMMENTS</a>
         </div>
     </div>
 </nav>
@@ -14,28 +14,26 @@
 
 {% block main %}
 
-<div class="bg-white p-5 border" style="height: 500px;">
+<div class="bg-white p-5 border rounded" style="height: 500px;">
     <!--TODO: IF SESSION USER_ID IS SAME AS PROFILE, ALLOW UPLOADING-->
-    <div class="d-flex justify-content-center" style="height: 9rem;">
+    <div class="d-flex justify-content-center" style="height: 7rem;">
         <img src="/static/images/profiles/default.jpg" class="img-fluid img-thumbnail rounded-circle">
     </div>
     <!--TODO: USERNAME SHOULD NOT BE HARDCODED-->
-    <div class="d-flex justify-content-center mb-5">@{{username}}</div>
+    <div class="d-flex justify-content-center mb-5">@{{ user }}</div>
     <div class="row text-center justify-content-evenly">
-        <!-- <div class="col-md">0</div> -->
-        <div class="col-lg-2 col-sm-5 bg-light m-1 p-2">
-            <div>150</div>
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+            <div>{{ total_rep }}</div>
             <div>Rep</div>
         </div>
-        <div class="col-lg-2 col-sm-5 bg-light m-1 p-2">
-            <div>150</div>
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+            <div>{{ post_contribution }}</div>
             <div>Posts</div>
         </div>
-        <div class="col-lg-2 col-sm-5 bg-light m-1 p-2">
-            <div>150</div>
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+            <div>{{ comment_contribution }}</div>
             <div>Comments</div>
         </div>
-        <!-- <div class="col-md">0</div> -->
     </div>
 </div>
 

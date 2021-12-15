@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block style %}
+<style>
+    .a-post {
+        margin-top: -1px;
+        position: relative;
+        border: 0.5px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .a-post:hover {
+        z-index: 1;
+        border: 1px solid rgba(0, 0, 0, 0.7) !important;
+        cursor: pointer;
+    }
+    
+</style>
+{% endblock %}
+
+{% block profilenavbar %}
+<nav class="navbar navbar-expand navbar-light bg-white border-bottom py-0">
+    <div class="container">
+        <div class="navbar-nav py-1" style="font-size: 14px;">
+            <a class="nav-link" href="{{url_for('profile', user=user)}}">OVERVIEW</a>
+            <a class="nav-link active" href="#">POSTS</a>
+            <a class="nav-link" href="{{url_for('profile-comments', user=user)}}">COMMENTS</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block main %}
+
+<div>
+    {% for post in posts %}
+    <div class="bg-white p-2 a-post">
+        <a id="openpost" href="{{url_for('post', id=post['post_id'])}}">Temp link</a>
+        <div class="row">
+            <div class="col-md-1 stretch order-md-first">TEST</div>
+            <div class="col order-sm-first order-first">
+                <div class="h5 text-break">
+                    {{ post["title"] }}
+                </div>
+                <div class="text-muted" style="font-size: small">
+                    Posted by {{ user }}
+                </div>
+                <div>
+                    {{ post["votes"] }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <div class="m-4"></div>
+</div>
+
+{% if not posts %}
+<div class="row nocomments">
+    <div class="col-md-4"></div>
+    <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
+        @{{user}} hasn't posted anything
+    </div>
+    <div class="col-md-4"></div>
+</div>
+{% endif %}
+
+{% endblock %}
