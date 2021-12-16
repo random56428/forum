@@ -42,7 +42,7 @@
                     {{ post["title"] }}
                 </div>
                 <div class="text-muted" style="font-size: small">
-                    Posted by {{ user }}
+                    Posted by {{ user }} {{ moment(post["date"]).fromNow() }}
                 </div>
                 <div>
                     {{ post["votes"] }}

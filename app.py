@@ -4,6 +4,8 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
+from flask_moment import Moment
 
 from temphelpers import login_required
 
@@ -30,6 +32,9 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///forum.db")
 
+# Configure application to use datetime Moment
+moment = Moment(app)
+
 # Gives username when signed in
 @app.context_processor
 def inject_user():
@@ -42,7 +47,10 @@ def inject_user():
 @login_required
 def index():
     # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
+    posts = db.execute("SELECT post_id, content, votes, title, username, date FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
+
+    # Convert datetime string back to datetime obj
+    parseAllToDatetimeObj(posts)
 
     return render_template("index.html", posts=posts)
 
@@ -145,14 +153,19 @@ def logout():
 def newpost():
     if request.method == "POST":
 
+        # Check if title is empty
         title = request.form.get("title")
         if not title:
             flash("Title input is blank", "danger")
             return render_template("newpost.html")
         
+        # Get text area value if it exists
         text = request.form.get("text")
+
+        # Create datetime obj as string for when post is created
+        created = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         
-        db.execute("INSERT INTO posts (user_id, title, content, votes) VALUES (?, ?, ?, ?)", session["user_id"], title, text, 1)
+        db.execute("INSERT INTO posts (user_id, title, content, votes, date) VALUES (?, ?, ?, ?, ?)", session["user_id"], title, text, 1, created)
 
         return redirect("/")
     else:
@@ -161,8 +174,16 @@ def newpost():
 @app.route("/post/<id>")
 @login_required
 def post(id):
-    posts = db.execute("SELECT post_id, content, votes, title, username FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
+    posts = db.execute("SELECT post_id, content, votes, title, username, date FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
+
+    # Check if post exists
+    if len(posts) == 0:
+        flash("Post does not exist", "danger")
+        return redirect("/")
+
+    parseAllToDatetimeObj(posts)
     comments = db.execute("SELECT comments.*, users.username FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
+    parseAllToDatetimeObj(comments)
     return render_template("post.html", posts=posts, comments=comments)
 
 @app.route("/newcomment", methods=["POST"])
@@ -178,36 +199,48 @@ def newcomment():
         textarea["nocomments"] = "false"
     else:
         textarea["nocomments"] = "true"
+    
+    # Create datetime object
+    created_obj = datetime.utcnow()
+    # Parse to string to insert into database
+    created_str = created_obj.strftime("%Y-%m-%d %H:%M:%S")
 
-    db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, votes) VALUES (?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], 1)
+    db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, votes, date) VALUES (?, ?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], 1, created_str)
+
+    # Query for person who commented to be returned
     username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
     textarea["username"] = username[0]["username"]
+
+    # Query for person who posted the post to be returned
+    textarea["username_op"] = (db.execute("SELECT username FROM users JOIN posts ON posts.user_id=users.id WHERE posts.post_id=?", textarea["post_id"]))[0]["username"]
 
     # Return constructed information to form a comment
     return textarea
 
+# Profile page
 @app.route("/profile/<user>")
 @app.route("/profile/<user>/posts", endpoint="profile-posts")
 @app.route("/profile/<user>/comments", endpoint="profile-comments")
 @login_required
 def profile(user):
-    # TODO: index homepage will use this func -> search any user's profile
     
     # Check if user is valid
     user_id = db.execute("SELECT id FROM users WHERE username=?", user)
     if len(user_id) == 0:
-        flash("Username does not exist", "danger")
+        flash("User profile does not exist", "danger")
         return redirect("/")
     user_id = user_id[0]["id"]
 
     if request.endpoint == "profile-posts":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-        posts = db.execute("SELECT post_id, votes, title FROM posts WHERE user_id=? ORDER BY post_id DESC", user_id)
+        posts = db.execute("SELECT post_id, votes, title, date FROM posts WHERE user_id=? ORDER BY post_id DESC", user_id)
+        parseAllToDatetimeObj(posts)
         return render_template("profileposts.html", posts=posts, user=user)
     elif request.endpoint == "profile-comments":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
         # DEMO: SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
         comments = db.execute("SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
+        parseAllToDatetimeObj(comments)
         return render_template("profilecomments.html", comments=comments, user=user)
 
     # Endpoint is overview
@@ -230,3 +263,8 @@ def profile(user):
     comment_contribution = (db.execute("SELECT COUNT(*) FROM comments WHERE refuser_id=?", user_id))[0]["COUNT(*)"]
 
     return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user)
+
+def parseAllToDatetimeObj(blocks):
+    # Convert datetime string back to datetime obj
+    for block in blocks:
+        block["date"] = datetime.strptime(block["date"], "%Y-%m-%d %H:%M:%S")

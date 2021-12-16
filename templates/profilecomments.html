@@ -54,7 +54,7 @@
             <div class="col">
                 <div style="font-size: 10.5px;">
                     {{user}} {% if user == comment["username"] %} <span class="text-primary fw-bold">OP</span> {% endif
-                    %} <span class="text-muted">{{ comment["votes"] }} points</span>
+                    %} <span class="text-muted">{{ comment["votes"] }} points &#183; {{ moment(comment["date"]).fromNow() }}</span>
                 </div>
                 <div style="font-size: 14px;">
                     {{ comment["comment"] }}

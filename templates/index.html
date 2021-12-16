@@ -25,7 +25,7 @@
         <div class="col-md-1 stretch order-md-first">TEST</div>
         <div class="col order-sm-first order-first">
             <div class="text-muted" style="font-size: small">
-                Posted by {{ post["username"] }}
+                Posted by {{ post["username"] }} {{ moment(post["date"]).fromNow() }}
             </div>
             <div class="h5 text-break">
                 {{ post["title"] }}

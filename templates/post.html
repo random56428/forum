@@ -5,7 +5,6 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
     //TODO: python serverside check if datetime.now >= latest request on clicking button
-    //TODO: check if textarea is empty serverside
     $(document).ready(function () {
         // Enables comment button if there is text inside of comment text area
         $("#commentarea").keyup(function () {
@@ -42,13 +41,21 @@
                         if (data["nocomments"] == "true") {
                             $(".nocomments").remove();
                         }
+                        
+                        // Checks if commenter if OP
+                        function isOP() {
+                            return (data["username"] == data["username_op"] ? true : false);
+                        }
 
                         // Insert comment into html
                         var str = ` <div class="row">
                                         <div class="col-md-1 stretch order-md-first"></div>
                                         <div class="col my-4 mx-2 order-sm-first order-first">
-                                            <div class="fw-bold" style="font-size: 12px">
-                                                ${data["username"]}
+                                            <div style="font-size: 12px">
+                                                <span class="fw-bold">${data["username"]} 
+                                                    ${ isOP() ? `<span class="text-primary">OP</span>` : ''}
+                                                     </span> 
+                                                    &#183; <span class="text-muted">just now</span>
                                             </div>
                                             <div class="text-box text-break">
                                                 ${data["text"]}
@@ -84,7 +91,7 @@
         <div class="col order-sm-first order-first">
             {% for post in posts %}
             <div class="text-muted" style="font-size: small">
-                Posted by {{ post["username"] }}
+                Posted by {{ post["username"] }} {{ moment(post["date"]).fromNow() }}
             </div>
             <div class="h5 text-break">
                 {{ post["title"] }}
@@ -122,8 +129,10 @@
     <div class="row">
         <div class="col-md-1 stretch order-md-first"></div>
         <div class="col my-4 mx-2 order-sm-first order-first">
-            <div class="fw-bold" style="font-size: 12px">
-                {{ comment["username"] }}
+            <div style="font-size: 12px">
+                <span class="fw-bold">{{ comment["username"] }} {% if posts[0]["username"] == comment["username"] %}
+                    <span class="text-primary">OP</span> {% endif%} </span> 
+                    &#183; <span class="text-muted">{{ moment(comment["date"]).fromNow() }}</span>
             </div>
             <div class="text-box text-break">
                 {{ comment["comment"] }}
