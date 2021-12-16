@@ -111,16 +111,16 @@ def register():
             return render_template("register.html")
             
         password = request.form.get("register_password")
-        confirmation = request.form.get("register_confirmation")
+        confirmpass = request.form.get("register_confirmation")
 
-        # Check if password/confirmation is blank and if !=
+        # Check if password/confirmpass is blank and if !=
         if not password:
             flash("Password input is blank.", "danger")
             return render_template("register.html")
-        elif not confirmation:
+        elif not confirmpass:
             flash("Confirmation password is blank.", "danger")
             return render_template("register.html")
-        elif password != confirmation:
+        elif password != confirmpass:
             flash("Passwords do not match.", "danger")
             return render_template("register.html")
 
@@ -263,6 +263,42 @@ def profile(user):
     comment_contribution = (db.execute("SELECT COUNT(*) FROM comments WHERE refuser_id=?", user_id))[0]["COUNT(*)"]
 
     return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user)
+
+# Settings for logged in user
+@app.route("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")
+
+# Change password
+@app.route("/changepass", methods=["POST"])
+@login_required
+def changepass():
+
+    oldpass = request.form.get("oldpass")
+    newpass = request.form.get("newpass")
+    confirmpass = request.form.get("confirmpass")
+
+    # Check if any of the box fields are not filled in
+    if not oldpass:
+        return jsonify(dict(msg = "Old password input blank", status = "error"))
+    elif not newpass:
+        return jsonify(dict(msg = "New password input blank", status = "error"))
+    elif not confirmpass:
+        return jsonify(dict(msg = "Confirmation password input blank", status = "error"))
+
+    # Verify if new password is the same as confirmpass
+    if not newpass == confirmpass:
+        return jsonify(dict(msg = "Old/new password must match", status = "error"))    
+        
+    # Verify if old password matches
+    hashpass = db.execute("SELECT hash FROM users WHERE id=?", session["user_id"])
+    if not check_password_hash(hashpass[0]["hash"], oldpass):
+        return jsonify(dict(msg = "Invalid old password", status = "error"))
+
+    db.execute("UPDATE users SET hash=? WHERE id=?", generate_password_hash(newpass), session["user_id"])
+
+    return jsonify(dict(msg = "Successfully changed password", status = "success"))
 
 def parseAllToDatetimeObj(blocks):
     # Convert datetime string back to datetime obj

@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block script %}
+<script>
+    $("body").css("background-color", "white");
+    $("#statusmsg").hide();
+
+    var passVisible = false;
+
+    $(document).ready(function () {
+        $("#passform").on("submit", function (e) {
+            e.preventDefault();
+            sendRequestChangePass();
+        })
+    })
+
+    function sendRequestChangePass() {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('changepass')}}",
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+            dataType: "json",
+            data: $("#passform").serialize(),
+            beforeSend: function () {
+                // Disables button, hides button text and adds a spinning wheel from Bootstrap
+                $("#chngpassbtn > .spinner-border").removeClass("visually-hidden");
+                $("#chngpassbtn > .btn-text").addClass("visually-hidden");
+            },
+            success: function (data) {
+                if (data["status"] == "error") {
+                    $("#statusmsg").css("color", "red");
+                } else {
+                    $("#statusmsg").css("color", "green");
+                    resetPassForm();
+                }
+                $("#statusmsg").text(data["msg"]);
+                $("#statusmsg").show();
+            },
+            error: function (e) {
+                console.log(e);
+            },
+            complete: function () {
+                $("#chngpassbtn > .spinner-border").addClass("visually-hidden");
+                $("#chngpassbtn > .btn-text").removeClass("visually-hidden");
+            }
+        });
+    }
+
+    function showPass() {
+        var passwordInputs = document.querySelectorAll(".passbox");
+        if (!passVisible) {
+            for (var i = 0; i < passwordInputs.length; i++) {
+                passwordInputs[i].type = "text";
+            }
+            passVisible = true;
+        } else {
+            for (var i = 0; i < passwordInputs.length; i++) {
+                passwordInputs[i].type = "password";
+            }
+            passVisible = false;
+        }
+    }
+
+    function resetPassForm() {
+        document.querySelector("#passform").reset();
+        passVisible = true;
+        showPass();
+    }
+
+</script>
+{% endblock %}
+
+{% block style %}
+<style>
+    hr {
+        opacity: 0.1;
+    }
+
+    .headings {
+        font-size: 10px;
+        margin-bottom: -12px;
+    }
+
+    .content {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block main %}
+<h5 class="mb-3">Settings</h5>
+<div class="bg-white p-1 border" style="height: 500px;">
+    <div>
+        <div class="headings text-muted fw-bold">PROFILE</div>
+        <hr>
+    </div>
+    <div class="content">
+    </div>
+    <div>
+        <div class="headings text-muted fw-bold">ACCOUNT</div>
+        <hr>
+    </div>
+    <div class="content">
+        <div>
+            <span style="font-size: 14px;">Change password</span>
+            <!--https://getbootstrap.com/docs/5.1/forms/overview/-->
+            <form id="passform" class="mt-1">
+                <div class="row mb-1">
+                    <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
+                        style="font-size: 12px;">OLD PASSWORD</label>
+                    <div class="col-10 col-md-6">
+                        <input type="password" class="passbox form-control form-control-sm" name="oldpass">
+                    </div>
+                </div>
+                <div class="row mb-1">
+                    <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
+                        style="font-size: 12px;">NEW PASSWORD</label>
+                    <div class="col-10 col-md-6">
+                        <input type="password" class="passbox form-control form-control-sm" name="newpass">
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
+                        style="font-size: 12px;">CONFIRM NEW PASSWORD</label>
+                    <div class="col-10 col-md-6">
+                        <input type="password" class="passbox form-control form-control-sm" name="confirmpass">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 col-md-3"></div>
+                    <div class="col-10 col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" onclick="showPass()">
+                            <label class="form-check-label text-muted" style="font-size: 13px;">
+                                Show password
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 col-md-3"></div>
+                    <div class="col-10 col-md-6">
+                        <button id="chngpassbtn" type="submit" class="btn btn-secondary btn-sm">
+                            <span class="spinner-border spinner-border-sm visually-hidden" role="status"
+                                aria-hidden="true"></span>
+                            <span class="btn-text">Save</span></button>
+                        <label class="mx-1" id="statusmsg" style="font-size: 14px;"></label>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div>
+        <div class="headings text-muted fw-bold">TERMINATE ACCOUNT</div>
+        <hr>
+    </div>
+    <div class="content">
+    </div>
+</div>
+{% endblock %}
