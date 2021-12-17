@@ -5,12 +5,35 @@
     $("body").css("background-color", "white");
     $("#statusmsg").hide();
 
-    var passVisible = false;
+    var oldPassVisible = false;
+    var newPassVisible = false;
+    var confirmPassVisible = false;
 
     $(document).ready(function () {
+        // Change password form
         $("#passform").on("submit", function (e) {
             e.preventDefault();
             sendRequestChangePass();
+        })
+
+        // Enables terminate button in modal
+        $("#confirmation").on("keyup", function (e) {
+            if ($(this).val() == `{{username}}`) {
+                $("#confirmationbtn").prop("disabled", false);
+            } else {
+                $("#confirmationbtn").prop("disabled", true);
+            }
+        })
+
+        // Clears input and disables button to prevent misclicks
+        $(".modal").on("hidden.bs.modal", function () {
+            $("#confirmation").val("");
+            $("#confirmationbtn").prop("disabled", true);
+        })
+
+        // Focus on input once modal is shown
+        $(".modal").on("shown.bs.modal", function () {
+            $("#confirmation").focus();
         })
     })
 
@@ -46,25 +69,57 @@
         });
     }
 
-    function showPass() {
-        var passwordInputs = document.querySelectorAll(".passbox");
-        if (!passVisible) {
-            for (var i = 0; i < passwordInputs.length; i++) {
-                passwordInputs[i].type = "text";
-            }
-            passVisible = true;
+    function resetPassForm() {
+        document.querySelector("#passform").reset();
+        oldPassVisible = true;
+        newPassVisible = true;
+        confirmPassVisible = true;
+        showOldPass();
+        showNewPass();
+        showConfirmPass();
+    }
+
+    // TODO: Refactor these "show" functions - duplication - parameterize
+    function showOldPass() {
+        var passwordInputs = document.querySelector("#oldpass");
+        var element = document.querySelector("#oldpassicon");
+        if (!oldPassVisible) {
+            passwordInputs.type = "text";
+            element.innerHTML = "&#xf070;";
+            oldPassVisible = true;
         } else {
-            for (var i = 0; i < passwordInputs.length; i++) {
-                passwordInputs[i].type = "password";
-            }
-            passVisible = false;
+            passwordInputs.type = "password";
+            element.innerHTML = "&#xf06e;";
+            oldPassVisible = false;
         }
     }
 
-    function resetPassForm() {
-        document.querySelector("#passform").reset();
-        passVisible = true;
-        showPass();
+    function showNewPass() {
+        var passwordInputs = document.querySelector("#newpass");
+        var element = document.querySelector("#newpassicon");
+        if (!newPassVisible) {
+            passwordInputs.type = "text";
+            element.innerHTML = "&#xf070;";
+            newPassVisible = true;
+        } else {
+            passwordInputs.type = "password";
+            element.innerHTML = "&#xf06e;";
+            newPassVisible = false;
+        }
+    }
+
+    function showConfirmPass() {
+        var passwordInputs = document.querySelector("#confirmpass");
+        var element = document.querySelector("#confirmpassicon");
+        if (!confirmPassVisible) {
+            passwordInputs.type = "text";
+            element.innerHTML = "&#xf070;";
+            confirmPassVisible = true;
+        } else {
+            passwordInputs.type = "password";
+            element.innerHTML = "&#xf06e;";
+            confirmPassVisible = false;
+        }
     }
 
 </script>
@@ -84,12 +139,21 @@
     .content {
         margin-bottom: 1rem;
     }
+
+    /* https://stackoverflow.com/questions/19571955/how-to-make-modal-dialog-with-blur-background-using-twitter-bootstrap */
+    .modal-open .content-container {
+        -webkit-filter: blur(1px);
+        -moz-filter: blur(1px);
+        -o-filter: blur(1px);
+        -ms-filter: blur(1px);
+        filter: blur(1px);
+    }
 </style>
 {% endblock %}
 
 {% block main %}
 <h5 class="mb-3">Settings</h5>
-<div class="bg-white p-1 border" style="height: 500px;">
+<div class="bg-white p-1 border">
     <div>
         <div class="headings text-muted fw-bold">PROFILE</div>
         <hr>
@@ -109,31 +173,36 @@
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">OLD PASSWORD</label>
                     <div class="col-10 col-md-6">
-                        <input type="password" class="passbox form-control form-control-sm" name="oldpass">
+                        <!-- <input type="password" class="passbox form-control form-control-sm" name="oldpass"> -->
+                        <div class="input-group input-group-sm">
+                            <input type="password" class="form-control form-control-sm" id="oldpass" name="oldpass">
+                            <span class="input-group-text" onclick="showOldPass()"><span class="fa"
+                                    id="oldpassicon">&#xf06e;</span></span>
+                        </div>
                     </div>
                 </div>
                 <div class="row mb-1">
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">NEW PASSWORD</label>
                     <div class="col-10 col-md-6">
-                        <input type="password" class="passbox form-control form-control-sm" name="newpass">
+                        <!-- <input type="password" class="passbox form-control form-control-sm" name="newpass"> -->
+                        <div class="input-group input-group-sm">
+                            <input type="password" class="form-control form-control-sm" id="newpass" name="newpass">
+                            <span class="input-group-text" onclick="showNewPass()"><span class="fa"
+                                    id="newpassicon">&#xf06e;</span></span>
+                        </div>
                     </div>
                 </div>
-                <div class="row mb-2">
+                <div class="row mb-1">
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">CONFIRM NEW PASSWORD</label>
                     <div class="col-10 col-md-6">
-                        <input type="password" class="passbox form-control form-control-sm" name="confirmpass">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-2 col-md-3"></div>
-                    <div class="col-10 col-md-6">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" onclick="showPass()">
-                            <label class="form-check-label text-muted" style="font-size: 13px;">
-                                Show password
-                            </label>
+                        <!-- <input type="password" class="passbox form-control form-control-sm" name="confirmpass"> -->
+                        <div class="input-group input-group-sm">
+                            <input type="password" class="form-control form-control-sm" id="confirmpass"
+                                name="confirmpass">
+                            <span class="input-group-text" onclick="showConfirmPass()"><span class="fa"
+                                    id="confirmpassicon">&#xf06e;</span></span>
                         </div>
                     </div>
                 </div>
@@ -151,10 +220,49 @@
         </div>
     </div>
     <div>
-        <div class="headings text-muted fw-bold">TERMINATE ACCOUNT</div>
+        <div class="headings text-muted fw-bold">DEACTIVATE ACCOUNT</div>
         <hr>
     </div>
     <div class="content">
+        <div>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+                <span style="font-size: 12px;">DEACTIVATE ACCOUNT</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block modal %}
+<!--https://getbootstrap.com/docs/5.1/components/modal/-->
+<div class="modal" id="deactivateModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="{{url_for('deactivateaccount')}}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="col-form-label col-form-label-sm">Are you sure? This action will permanently remove
+                        your access to the account "<strong>{{username}}</strong>".</label>
+                    <ul class="small">
+                        <li>The creation of the same username will not be eligible.</li>
+                        <li>All posts, comments you've made will remain on the forum.</li>
+                    </ul>
+                    <label class="col-form-label col-form-label-sm">Please type "<strong>{{username}}</strong>" to
+                        confirm.</label>
+                    <input type="text" class="form-control form-control-sm" id="confirmation" name="confirmation">
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill p-2"
+                        data-bs-dismiss="modal">CANCEL</button>
+                    <button type="submit" class="btn btn-danger btn-sm rounded-pill p-2" id="confirmationbtn"
+                        disabled>DEACTIVATE</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

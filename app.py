@@ -47,7 +47,7 @@ def inject_user():
 @login_required
 def index():
     # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-    posts = db.execute("SELECT post_id, content, votes, title, username, date FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
+    posts = db.execute("SELECT post_id, content, votes, title, username, date, active FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
 
     # Convert datetime string back to datetime obj
     parseAllToDatetimeObj(posts)
@@ -86,6 +86,11 @@ def login():
             flash("The username or password is incorrect.", "danger")
             return render_template("login.html")
         
+        # Check if account is deactivated
+        if rows[0]["active"] == 0:
+            flash("Account has been deactivated.", "danger")
+            return render_template("login.html")
+        
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
 
@@ -109,18 +114,26 @@ def register():
         elif len(db.execute("SELECT * FROM users WHERE username=?", username)) != 0:
             flash("Username already exists.", "danger")
             return render_template("register.html")
+
+        # https://owasp.org/www-community/password-special-characters
+        special_chars = " !\"#$%&'()*+,./:;<=>?@[\]^`{|}~"
+        # Check if username has special characters
+        for c in username:
+            if c in special_chars:
+                flash("Username must not contain special characters or spaces.", "danger")
+                return render_template("register.html")
             
         password = request.form.get("register_password")
-        confirmpass = request.form.get("register_confirmation")
+        confirmation = request.form.get("register_confirmation")
 
-        # Check if password/confirmpass is blank and if !=
+        # Check if password/confirmation is blank and if !=
         if not password:
             flash("Password input is blank.", "danger")
             return render_template("register.html")
-        elif not confirmpass:
+        elif not confirmation:
             flash("Confirmation password is blank.", "danger")
             return render_template("register.html")
-        elif password != confirmpass:
+        elif password != confirmation:
             flash("Passwords do not match.", "danger")
             return render_template("register.html")
 
@@ -156,7 +169,7 @@ def newpost():
         # Check if title is empty
         title = request.form.get("title")
         if not title:
-            flash("Title input is blank", "danger")
+            flash("Title input is blank.", "danger")
             return render_template("newpost.html")
         
         # Get text area value if it exists
@@ -165,7 +178,7 @@ def newpost():
         # Create datetime obj as string for when post is created
         created = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         
-        db.execute("INSERT INTO posts (user_id, title, content, votes, date) VALUES (?, ?, ?, ?, ?)", session["user_id"], title, text, 1, created)
+        db.execute("INSERT INTO posts (user_id, title, content, date) VALUES (?, ?, ?, ?)", session["user_id"], title, text, created)
 
         return redirect("/")
     else:
@@ -174,15 +187,15 @@ def newpost():
 @app.route("/post/<id>")
 @login_required
 def post(id):
-    posts = db.execute("SELECT post_id, content, votes, title, username, date FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
+    posts = db.execute("SELECT post_id, content, votes, title, username, date, active FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
 
     # Check if post exists
     if len(posts) == 0:
-        flash("Post does not exist", "danger")
+        flash("Post does not exist.", "danger")
         return redirect("/")
 
     parseAllToDatetimeObj(posts)
-    comments = db.execute("SELECT comments.*, users.username FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
+    comments = db.execute("SELECT comments.*, users.username, users.active FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
     parseAllToDatetimeObj(comments)
     return render_template("post.html", posts=posts, comments=comments)
 
@@ -205,7 +218,7 @@ def newcomment():
     # Parse to string to insert into database
     created_str = created_obj.strftime("%Y-%m-%d %H:%M:%S")
 
-    db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, votes, date) VALUES (?, ?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], 1, created_str)
+    db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, date) VALUES (?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], created_str)
 
     # Query for person who commented to be returned
     username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
@@ -225,10 +238,16 @@ def newcomment():
 def profile(user):
     
     # Check if user is valid
-    user_id = db.execute("SELECT id FROM users WHERE username=?", user)
+    user_id = db.execute("SELECT id, active FROM users WHERE username=?", user)
     if len(user_id) == 0:
-        flash("User profile does not exist", "danger")
+        flash("User profile does not exist.", "danger")
         return redirect("/")
+
+    # Check if account is active
+    if user_id[0]["active"] == 0:
+        flash("User account is not active.", "danger")
+        return redirect("/")
+    
     user_id = user_id[0]["id"]
 
     if request.endpoint == "profile-posts":
@@ -238,12 +257,12 @@ def profile(user):
         return render_template("profileposts.html", posts=posts, user=user)
     elif request.endpoint == "profile-comments":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-        # DEMO: SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
-        comments = db.execute("SELECT comments.*, posts.title, users.username FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
+        # DEMO: SELECT comments.*, posts.title, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
+        comments = db.execute("SELECT comments.*, posts.title, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
         parseAllToDatetimeObj(comments)
         return render_template("profilecomments.html", comments=comments, user=user)
 
-    # Endpoint is overview
+    # Endpoint is user - overview
     # Calculate total reputation for given user
     post_votes = db.execute("SELECT votes FROM posts WHERE user_id=?", user_id)
     comment_votes = db.execute("SELECT votes FROM comments WHERE refuser_id=?", user_id)
@@ -299,6 +318,19 @@ def changepass():
     db.execute("UPDATE users SET hash=? WHERE id=?", generate_password_hash(newpass), session["user_id"])
 
     return jsonify(dict(msg = "Successfully changed password", status = "success"))
+
+# Deactivate account
+@app.route("/deactivateaccount", methods=["POST"])
+@login_required
+def deactivateaccount():
+
+    user_id = session["user_id"]
+
+    db.execute("UPDATE users SET active=0 WHERE id=?", user_id)
+
+    session.clear()
+    flash("Deactivated! We're sorry to see you go.", "success")
+    return render_template("login.html")
 
 def parseAllToDatetimeObj(blocks):
     # Convert datetime string back to datetime obj

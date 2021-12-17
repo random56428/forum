@@ -13,6 +13,9 @@
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <title>Forum</title>
 
@@ -56,75 +59,78 @@
 </head>
 
 <body style="background-color: #dae0e6;">
+    <div class="content-container">
+        <!--https://getbootstrap.com/docs/5.1/components/navbar/-->
+        <nav class="navbar navbar-expand navbar-light bg-white sticky-top border-bottom">
+            <div class="container-fluid">
+                <a class="navbar-brand mb-0 h4" href="{{url_for('index')}}">Forum</a>
+                {% if not session["user_id"] %}
+                <div class="navbar-nav">
+                    <div class="nav-item">
+                        <a class="btn px-3 navbar-btn" role="button" href="{{url_for('login')}}">Log in</a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="btn px-3 ms-2 navbar-btn" role="button" href="{{url_for('register')}}">Sign up</a>
+                    </div>
+                </div>
+                {% else %}
+                <!-- <a class="btn px-3 navbar-btn" role="button" href="{{url_for('logout')}}">Logout</a> -->
+                <div class="navbar-nav dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <span style="font-size: 14px;">{{ username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item py-2" href="{{url_for('profile', user=username)}}">Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="{{url_for('settings')}}">Settings</a></li>
+                        <li class="d-flex justify-content-center">
+                            <hr class="dropdown-divider" style="width: 80%;">
+                        </li>
+                        <li><a class="dropdown-item py-2" href="{{url_for('logout')}}">Logout</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
 
-    <!--https://getbootstrap.com/docs/5.1/components/navbar/-->
-    <nav class="navbar navbar-expand navbar-light bg-white sticky-top border-bottom">
-        <div class="container-fluid">
-            <a class="navbar-brand mb-0 h4" href="{{url_for('index')}}">Forum</a>
-            {% if not session["user_id"] %}
-            <div class="navbar-nav">
-                <div class="nav-item">
-                    <a class="btn px-3 navbar-btn" role="button" href="{{url_for('login')}}">Log in</a>
-                </div>
-                <div class="nav-item">
-                    <a class="btn px-3 ms-2 navbar-btn" role="button" href="{{url_for('register')}}">Sign up</a>
+        {% block profilenavbar %}{% endblock %}
+
+        {% block manualflash %}{% endblock %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <!--Unsuccessful in red message-->
+        <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
+        <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
+        <div class="toast-container position-fixed top-0 start-50 translate-middle-x mt-3" onclick="hideToast()"
+            style="z-index: 1050;">
+            <div class="toast flashbox" role="alert">
+                <div class="toast-body p-0">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} m-0" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% else %}
-            <!-- <a class="btn px-3 navbar-btn" role="button" href="{{url_for('logout')}}">Logout</a> -->
-            <div class="navbar-nav dropdown">
-                <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <span style="font-size: 14px;">{{ username }}</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item py-2" href="{{url_for('profile', user=username)}}">Profile</a></li>
-                    <li><a class="dropdown-item py-2" href="{{url_for('settings')}}">Settings</a></li>
-                    <li class="d-flex justify-content-center">
-                        <hr class="dropdown-divider" style="width: 80%;">
-                    </li>
-                    <li><a class="dropdown-item py-2" href="{{url_for('logout')}}">Logout</a></li>
-                </ul>
-            </div>
-            {% endif %}
         </div>
-    </nav>
 
-    {% block profilenavbar %}{% endblock %}
+        <script>
+            var toast = new bootstrap.Toast(document.querySelector(".flashbox"));
+            toast.show();
+            function hideToast() {
+                toast.hide();
+            }
+        </script>
+        {% endif %}
+        {% endwith %}
 
-    {% block manualflash %}{% endblock %}
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <!--Unsuccessful in red message-->
-    <!--https://getbootstrap.com/docs/5.1/components/toasts/-->
-    <!--https://getbootstrap.com/docs/5.1/components/alerts/-->
-    <div class="toast-container position-fixed top-0 start-50 translate-middle-x mt-3" onclick="hideToast()"
-        style="z-index: 1050;">
-        <div class="toast flashbox" role="alert">
-            <div class="toast-body p-0">
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }} m-0" role="alert">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+        <main class="container mt-4">
+            {% block main %}{% endblock %}
+        </main>
     </div>
 
-    <script>
-        var toast = new bootstrap.Toast(document.querySelector(".flashbox"));
-        toast.show();
-        function hideToast() {
-            toast.hide();
-        }
-    </script>
-    {% endif %}
-    {% endwith %}
-
-    <main class="container mt-4">
-        {% block main %}{% endblock %}
-    </main>
+    {% block modal %}{% endblock %}
 
     {% block script %}{% endblock %}
 </body>

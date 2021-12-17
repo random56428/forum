@@ -13,7 +13,6 @@
         border: 1px solid rgba(0, 0, 0, 0.7) !important;
         cursor: pointer;
     }
-    
 </style>
 {% endblock %}
 
@@ -34,17 +33,16 @@
 <div>
     {% if comments %}
     <div class="a-block bg-white p-2 text-break border" style="font-size: 11px;">
-        {{user}} <span class="text-muted">commented on {{ comments[0]["title"] }} &#183; Posted by {{
-            comments[0]["username"]
-            }}</span>
+        {{user}} <span class="text-muted">commented on {{ comments[0]["title"] }} &#183; Posted by
+            {% if comments[0]["active"] == 1 %} {{comments[0]["username"]}} {% else %} [deleted] {% endif %}</span>
     </div>
     {% set ns = namespace(match=comments[0]["title"]) %}
     {% endif %}
     {% for comment in comments %}
     {% if ns.match != comment["title"] %}
     <div class="a-block bg-white p-2 text-break border mt-1" style="font-size: 11px;">
-        {{user}} <span class="text-muted">commented on {{ comment["title"] }} &#183; Posted by {{ comment["username"]
-            }}</span>
+        {{user}} <span class="text-muted">commented on {{ comment["title"] }} &#183; Posted by 
+            {% if comments["active"] == 1 %} {{comments["username"]}} {% else %} [deleted] {% endif %}</span>
     </div>
     {% set ns.match = comment["title"] %}
     {% endif %}
@@ -54,7 +52,8 @@
             <div class="col">
                 <div style="font-size: 10.5px;">
                     {{user}} {% if user == comment["username"] %} <span class="text-primary fw-bold">OP</span> {% endif
-                    %} <span class="text-muted">{{ comment["votes"] }} points &#183; {{ moment(comment["date"]).fromNow() }}</span>
+                    %} <span class="text-muted">{{ comment["votes"] }} points &#183; {{
+                        moment(comment["date"]).fromNow() }}</span>
                 </div>
                 <div style="font-size: 14px;">
                     {{ comment["comment"] }}
