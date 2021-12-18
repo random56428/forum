@@ -1,19 +1,28 @@
+import os
+import uuid
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
-from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError, RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 from flask_moment import Moment
 
 from temphelpers import login_required
 
+# https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/
+# Configure constants for file uploading
+UPLOAD_FOLDER = './static/images/profiles'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 # Configure application
 app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+# Configure upload folder location
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Ensure responses aren't cached
 @app.after_request
@@ -238,17 +247,17 @@ def newcomment():
 def profile(user):
     
     # Check if user is valid
-    user_id = db.execute("SELECT id, active FROM users WHERE username=?", user)
-    if len(user_id) == 0:
+    user_info = db.execute("SELECT id, active, pic FROM users WHERE username=?", user)
+    if len(user_info) == 0:
         flash("User profile does not exist.", "danger")
         return redirect("/")
 
     # Check if account is active
-    if user_id[0]["active"] == 0:
+    if user_info[0]["active"] == 0:
         flash("User account is not active.", "danger")
         return redirect("/")
     
-    user_id = user_id[0]["id"]
+    user_id = user_info[0]["id"]
 
     if request.endpoint == "profile-posts":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
@@ -263,6 +272,10 @@ def profile(user):
         return render_template("profilecomments.html", comments=comments, user=user)
 
     # Endpoint is user - overview
+
+    # Get profile picture
+    pic = "/static/images/profiles/" + user_info[0]["pic"]
+
     # Calculate total reputation for given user
     post_votes = db.execute("SELECT votes FROM posts WHERE user_id=?", user_id)
     comment_votes = db.execute("SELECT votes FROM comments WHERE refuser_id=?", user_id)
@@ -281,13 +294,17 @@ def profile(user):
     # Calculate total comment contributions
     comment_contribution = (db.execute("SELECT COUNT(*) FROM comments WHERE refuser_id=?", user_id))[0]["COUNT(*)"]
 
-    return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user)
+    return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user, pic=pic)
 
 # Settings for logged in user
 @app.route("/settings")
 @login_required
 def settings():
-    return render_template("settings.html")
+
+    # Query for profile picture of logged in user
+    pic = "/static/images/profiles/" + (db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"]
+
+    return render_template("settings.html", pic=pic)
 
 # Change password
 @app.route("/changepass", methods=["POST"])
@@ -332,7 +349,83 @@ def deactivateaccount():
     flash("Deactivated! We're sorry to see you go.", "success")
     return render_template("login.html")
 
+# Change/upload profile picture
+@app.route("/uploadpic", methods=["POST"])
+@login_required
+def uploadpic():
+    # https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/
+    # Check if file is in post request
+    if "file" not in request.files:
+        return jsonify(dict(msg = "No file part detected.", status = "error"))
+    
+    file = request.files.get("file")
+
+    # Check if file name is empty or file doesn't exist
+    if file.filename == "" or not file:
+        return jsonify(dict(msg = "No file was selected.", status = "error"))
+
+    # Check if file extension is allowed
+    if not allowedFile(file.filename):
+        return jsonify(dict(msg = "File extension not supported.", status = "error"))
+
+    # Check if file size is smaller than 2mb
+    if getSize(file) > 2097152:
+        return jsonify(dict(msg = "File size limit of 2 MB exceeded.", status = "error"))
+
+    # Replace file.filename with randomly generated uuid
+    filename = str(uuid.uuid4()) + "." + file.filename.rsplit('.', 1)[1].lower()
+
+    # Update profile picture link in database
+    db.execute("UPDATE users SET pic=? WHERE id=?", filename, session["user_id"])
+
+    # Store file in web server
+    file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+    # Get new profile picture
+    newpic = "/static/images/profiles/" + filename
+
+    return jsonify(dict(msg = "", status="success", newpic=newpic))
+
+# Remove profile picture
+@app.route("/removepic", methods=["POST"])
+@login_required
+def removepic():
+    # Check if user already has default picture
+    if ((db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"] == "default.jpg"):
+        return ""
+    db.execute("UPDATE users SET pic='default.jpg' WHERE id=?", session["user_id"])
+    return "/static/images/profiles/default.jpg"
+
 def parseAllToDatetimeObj(blocks):
     # Convert datetime string back to datetime obj
     for block in blocks:
         block["date"] = datetime.strptime(block["date"], "%Y-%m-%d %H:%M:%S")
+
+# https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/
+def allowedFile(filename):
+    # Returns false if file does not have extension or if file extension is not allowed,
+    # otherwise, return true
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# https://stackoverflow.com/questions/22105315/flask-getting-the-size-of-each-file-in-a-request?rq=1
+# https://stackoverflow.com/questions/15772975/flask-get-the-size-of-request-files-object
+# Get size of file
+def getSize(file):
+    # Check if file has content length header set, return it if so
+    if file.content_length:
+        return file.content_length
+
+    try:
+        # Start at end reference point, get file length, go back to beginning point
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0, 0)
+        return file_size
+    except (AttributeError, IOError):
+        # Catch exception if file does not support seeking and continue
+        pass
+
+    # File doesn't support seeking
+    return 0
+
+    

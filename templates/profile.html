@@ -14,11 +14,11 @@
 
 {% block main %}
 
-<div class="bg-white p-5 border rounded" style="height: 500px;">
-    <div class="d-flex justify-content-center" style="height: 7rem;">
-        <img src="/static/images/profiles/default.jpg" class="img-fluid img-thumbnail rounded-circle">
+<div class="bg-white p-5 border rounded">
+    <div class="d-flex justify-content-center">
+        <img src="{{pic}}" id="profilepic" class="img-thumbnail rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
     </div>
-    <div class="d-flex justify-content-center mb-5">@{{ user }}</div>
+    <div class="d-flex justify-content-center mb-4">@{{ user }}</div>
     <div class="row text-center justify-content-evenly">
         <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
             <div>{{ total_rep }}</div>

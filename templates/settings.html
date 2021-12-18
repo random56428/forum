@@ -3,7 +3,7 @@
 {% block script %}
 <script>
     $("body").css("background-color", "white");
-    $("#statusmsg").hide();
+    $("#statusmsg-pass").hide();
 
     var oldPassVisible = false;
     var newPassVisible = false;
@@ -14,6 +14,19 @@
         $("#passform").on("submit", function (e) {
             e.preventDefault();
             sendRequestChangePass();
+        })
+
+        // Upload profile picture
+        $("#fileupload").on("change", function () {
+            uploadPicture();
+        })
+
+        // Remove profile picture
+        $("#removepic").on("click", function () {
+            var path = $("#profilepic").prop("src").split("/");
+            if (path[path.length - 1] != "default.jpg") {
+                removePicture();
+            }
         })
 
         // Enables terminate button in modal
@@ -37,6 +50,63 @@
         })
     })
 
+    function removePicture() {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('removepic')}}",
+            dataType: "text",
+            beforeSend: function () {
+                $("#removepic > .spinner-border").removeClass("visually-hidden");
+                $("#removepic > .btn-text").addClass("visually-hidden");
+            },
+            success: function (data) {
+                if (data != "") {
+                    $("#profilepic").prop("src", data);
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            },
+            complete: function () {
+                $("#removepic > .spinner-border").addClass("visually-hidden");
+                $("#removepic > .btn-text").removeClass("visually-hidden");
+            }
+        })
+    }
+
+    function uploadPicture() {
+        // https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
+        var form = $("#picform")[0];
+        var formData = new FormData(form);
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('uploadpic')}}",
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            data: formData,
+            beforeSend: function () {
+                $("#pic-loading").removeClass("visually-hidden");
+            },
+            success: function (data) {
+                if (data["status"] == "error") {
+                    $("#statusmsg-pic").text(data["msg"]);
+                    $("#statusmsg-pic").css("color", "red");
+                } else {
+                    $("#statusmsg-pic").text(data["msg"]);
+                    $("#statusmsg-pic").css("color", "green");
+                    $("#profilepic").prop("src", data["newpic"]);
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            },
+            complete: function () {
+                $("#pic-loading").addClass("visually-hidden");
+            }
+        })
+    }
+
     function sendRequestChangePass() {
         $.ajax({
             type: "POST",
@@ -51,13 +121,13 @@
             },
             success: function (data) {
                 if (data["status"] == "error") {
-                    $("#statusmsg").css("color", "red");
+                    $("#statusmsg-pass").css("color", "red");
                 } else {
-                    $("#statusmsg").css("color", "green");
+                    $("#statusmsg-pass").css("color", "green");
                     resetPassForm();
                 }
-                $("#statusmsg").text(data["msg"]);
-                $("#statusmsg").show();
+                $("#statusmsg-pass").text(data["msg"]);
+                $("#statusmsg-pass").show();
             },
             error: function (e) {
                 console.log(e);
@@ -159,6 +229,28 @@
         <hr>
     </div>
     <div class="content">
+        <div>
+            <div class="my-2 col-12 col-lg-8 col-md-9 d-flex justify-content-md-start justify-content-center">
+                <div class="d-flex align-items-center justify-content-center">
+                    <img src="{{pic}}" id="profilepic" class="img-thumbnail rounded-circle mb-1"
+                        style="width: 120px; height: 120px; object-fit: cover;">
+                    <span id="pic-loading" class="spinner-border visually-hidden" role="status" aria-hidden="true"
+                        style="position: absolute;"></span>
+                </div>
+            </div>
+            <!--https://getbootstrap.com/docs/5.1/forms/form-control/?#file-input-->
+            <form id="picform">
+                <div class="my-2 col-12 col-lg-8 col-md-9">
+                    <input id="fileupload" class="form-control form-control-sm" type="file" name="file"
+                        accept="image/*">
+                </div>
+            </form>
+            <div id="statusmsg-pic" class="small"></div>
+            <button id="removepic" class="btn btn-outline-secondary btn-sm mt-2">
+                <span class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
+                <span class="btn-text">Remove Profile Picture</span>
+            </button>
+        </div>
     </div>
     <div>
         <div class="headings text-muted fw-bold">ACCOUNT</div>
@@ -172,7 +264,7 @@
                 <div class="row mb-1">
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">OLD PASSWORD</label>
-                    <div class="col-10 col-md-6">
+                    <div class="col-12 col-md-6">
                         <!-- <input type="password" class="passbox form-control form-control-sm" name="oldpass"> -->
                         <div class="input-group input-group-sm">
                             <input type="password" class="form-control form-control-sm" id="oldpass" name="oldpass">
@@ -184,7 +276,7 @@
                 <div class="row mb-1">
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">NEW PASSWORD</label>
-                    <div class="col-10 col-md-6">
+                    <div class="col-12 col-md-6">
                         <!-- <input type="password" class="passbox form-control form-control-sm" name="newpass"> -->
                         <div class="input-group input-group-sm">
                             <input type="password" class="form-control form-control-sm" id="newpass" name="newpass">
@@ -196,7 +288,7 @@
                 <div class="row mb-1">
                     <label class="col-lg-2 col-md-3 col-form-label col-form-label-sm text-muted"
                         style="font-size: 12px;">CONFIRM NEW PASSWORD</label>
-                    <div class="col-10 col-md-6">
+                    <div class="col-12 col-md-6">
                         <!-- <input type="password" class="passbox form-control form-control-sm" name="confirmpass"> -->
                         <div class="input-group input-group-sm">
                             <input type="password" class="form-control form-control-sm" id="confirmpass"
@@ -209,11 +301,11 @@
                 <div class="row">
                     <div class="col-lg-2 col-md-3"></div>
                     <div class="col-10 col-md-6">
-                        <button id="chngpassbtn" type="submit" class="btn btn-secondary btn-sm">
+                        <button id="chngpassbtn" type="submit" class="btn btn-outline-secondary btn-sm">
                             <span class="spinner-border spinner-border-sm visually-hidden" role="status"
                                 aria-hidden="true"></span>
                             <span class="btn-text">Save</span></button>
-                        <label class="mx-1" id="statusmsg" style="font-size: 14px;"></label>
+                        <label class="mx-1" id="statusmsg-pass" style="font-size: 14px;"></label>
                     </div>
                 </div>
             </form>
@@ -225,7 +317,8 @@
     </div>
     <div class="content">
         <div>
-            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deactivateModal">
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                data-bs-target="#deactivateModal">
                 <span style="font-size: 12px;">DEACTIVATE ACCOUNT</span>
             </button>
         </div>

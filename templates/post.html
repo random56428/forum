@@ -20,7 +20,7 @@
                 $("#commentbtn").prop("disabled", true);
             }
         })
-        
+
         // Sends comment to server if textarea is not empty
         $("#commentbtn").click(function () {
             // Checks if comment area is not empty
@@ -137,14 +137,14 @@
         <div class="col order-sm-first order-first">
             {% for post in posts %}
             <div class="text-muted" style="font-size: small">
-                Posted by {% if post["active"] == 1 %} {{ post["username"] }} {% else %} [deleted] {% endif %} 
+                Posted by {% if post["active"] == 1 %} {{ post["username"] }} {% else %} [deleted] {% endif %}
                 {{ moment(post["date"]).fromNow() }}
             </div>
             <div class="h5 text-break">
                 {{ post["title"] }}
             </div>
             <div class="small text-box text-break">
-                {% if post["active"] == 1 %} {{ post["content"] }} {% else %} [deleted] {% endif %} 
+                {% if post["active"] == 1 %} {{ post["content"] }} {% else %} [deleted] {% endif %}
             </div>
             <div>
                 {{ post["votes"] }}
@@ -173,12 +173,12 @@
     </div>
 
     {% for comment in comments %}
+    {% if comment["active"] == 1 %}
     <div class="row">
         <div class="col-md-1 stretch order-md-first"></div>
         <div class="col my-4 mx-2 order-sm-first order-first">
             <div style="font-size: 12px">
-                <span class="fw-bold">{% if comment["active"] == 1 %} {{ comment["username"] }} {% else %} [deleted] 
-                    {% endif %} {% if posts[0]["username"] == comment["username"] %}
+                <span class="fw-bold">{{ comment["username"] }} {% if posts[0]["username"] == comment["username"] %}
                     <span class="text-primary">OP</span> {% endif%} </span>
                 &#183; <span class="text-muted">{{ moment(comment["date"]).fromNow() }}</span>
             </div>
@@ -190,7 +190,9 @@
             </div>
         </div>
     </div>
+    {% endif %}
     {% endfor %}
+    
     {% if not comments %}
     <div class="row nocomments">
         <div class="col-md-4"></div>
