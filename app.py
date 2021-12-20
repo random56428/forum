@@ -188,6 +188,10 @@ def newpost():
         created = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         
         db.execute("INSERT INTO posts (user_id, title, content, date) VALUES (?, ?, ?, ?)", session["user_id"], title, text, created)
+        # Query for created post's id
+        post_id = (db.execute("SELECT post_id FROM posts WHERE user_id=? AND date=?", session["user_id"], created))[0]["post_id"]
+        # Upvote own post
+        db.execute("INSERT INTO post_votes (user_id, post_id, vote) VALUES (?, ?, 1)", session["user_id"], post_id)
 
         return redirect("/")
     else:

@@ -16,12 +16,6 @@
         flex-direction: column;
     }
 
-    @media screen and (max-width: 768px) {
-        #votebox {
-            flex-direction: row;
-        }
-    }
-
     .upvote,
     .downvote {
         padding: 0;
@@ -42,6 +36,20 @@
 
     .downvote-color {
         color: rgb(113, 147, 255) !important;
+    }
+
+    .maxwidth-md {
+        max-width: 55px;
+    }
+
+    @media screen and (max-width: 768px) {
+        #votebox {
+            flex-direction: row;
+        }
+
+        .maxwidth-md {
+            max-width: none;
+        }
     }
 </style>
 {% endblock %}
@@ -142,51 +150,54 @@
 <div class="bg-white p-2 mb-2 rounded a-post">
     <a href="{{url_for('post', id=post['post_id'])}}">Temp link</a>
     <div class="row">
-        <div class="col-md-1 stretch order-md-first">
-            <div id="votebox" class="d-flex align-items-center">
-                {% if post["vote"] == -1 %}
-                <div>
-                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
-                        <i class="fas fa-caret-up fa-2x"></i>
-                    </button>
+        <div class="d-flex justify-content-center maxwidth-md">
+            <div class="col col-md-12 order-last order-md-first">
+                <div id="votebox" class="d-flex align-items-center">
+                    {% if post["vote"] == -1 %}
+                    <div>
+                        <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
+                            <i class="fas fa-caret-up fa-2x"></i>
+                        </button>
+                    </div>
+                    <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                        post["votes"] }}</div>
+                    <div>
+                        <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1 downvote-color">
+                            <i class="fas fa-caret-down fa-2x"></i>
+                        </button>
+                    </div>
+                    {% elif post["vote"] == 1 %}
+                    <div>
+                        <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1 upvote-color">
+                            <i class="fas fa-caret-up fa-2x"></i>
+                        </button>
+                    </div>
+                    <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                        {{ post["votes"] }}</div>
+                    <div>
+                        <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
+                            <i class="fas fa-caret-down fa-2x"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div>
+                        <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
+                            <i class="fas fa-caret-up fa-2x"></i>
+                        </button>
+                    </div>
+                    <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}
+                    </div>
+                    <div>
+                        <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
+                            <i class="fas fa-caret-down fa-2x"></i>
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
-                <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
-                    post["votes"] }}</div>
-                <div>
-                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1 downvote-color">
-                        <i class="fas fa-caret-down fa-2x"></i>
-                    </button>
-                </div>
-                {% elif post["vote"] == 1 %}
-                <div>
-                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1 upvote-color">
-                        <i class="fas fa-caret-up fa-2x"></i>
-                    </button>
-                </div>
-                <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
-                    {{ post["votes"] }}</div>
-                <div>
-                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
-                        <i class="fas fa-caret-down fa-2x"></i>
-                    </button>
-                </div>
-                {% else %}
-                <div>
-                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
-                        <i class="fas fa-caret-up fa-2x"></i>
-                    </button>
-                </div>
-                <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}</div>
-                <div>
-                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
-                        <i class="fas fa-caret-down fa-2x"></i>
-                    </button>
-                </div>
-                {% endif %}
             </div>
         </div>
 
-        <div class="col order-sm-first order-first">
+        <div class="col-12 col-md order-first order-md-last ps-3 ps-md-0">
             <div class="text-muted" style="font-size: small">
                 Posted by {{ post["username"] }} {{ moment(post["date"]).fromNow() }}
             </div>

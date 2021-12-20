@@ -2,12 +2,12 @@
 
 <!--TODO: Move all script stuff to static folder-->
 {% block script %}
-<script>
-    $(document).ready(function () {
-        var locked = false;
-        var toastShown = false;
-        var toast = new bootstrap.Toast(document.querySelector(".manual-flashbox"));
+<script>        
+    var locked = false;
+    var toastShown = false;
+    var toast = new bootstrap.Toast(document.querySelector(".manual-flashbox"));
 
+    $(document).ready(function () {
         $(".manual-flashbox").click(function () {
             hideToast();
         })
@@ -51,12 +51,12 @@
             downvote(id, "post");
         })
 
-        $(".upvotecomment").on("click", function (event) {
+        $(".a-post").on("click", ".upvotecomment", function (event) {
             var id = $(event.currentTarget).prop("id");
             upvote(id, "comment");
         })
 
-        $(".downvotecomment").on("click", function (event) {
+        $(".a-post").on("click", ".downvotecomment", function (event) {
             var id = $(event.currentTarget).prop("id");
             downvote(id, "comment");
         })
@@ -220,7 +220,7 @@
 
                     // Insert comment into html
                     var str = ` <div class="row">
-                                    <div class="col-md-1 stretch order-md-first"></div>
+                                    <div class="col-md-1 order-md-first"></div>
                                     <div class="col my-4 mx-2 order-sm-first order-first">
                                         <div style="font-size: 12px">
                                             <span class="fw-bold">${data["username"]} 
@@ -331,7 +331,7 @@
 {% for post in posts %}
 <div class="bg-white p-2 mb-3 rounded a-post">
     <div class="row">
-        <div class="col-md-1 stretch order-md-first">
+        <div class="col-md-1 order-md-first">
             <div id="votebox" class="d-flex align-items-center">
                 {% if post["vote"] == -1 %}
                 <div>
@@ -414,7 +414,7 @@
     {% for comment in comments %}
     {% if comment["active"] == 1 %}
     <div class="row">
-        <div class="col-md-1 stretch order-md-first"></div>
+        <div class="col-md-1 order-md-first bg-primary"></div>
         <div class="col my-4 mx-2 order-sm-first order-first">
             <div style="font-size: 12px">
                 <span class="fw-bold">{{ comment["username"] }} {% if posts[0]["username"] == comment["username"] %}
