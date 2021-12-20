@@ -56,7 +56,7 @@ def inject_user():
 @login_required
 def index():
     # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-    posts = db.execute("SELECT post_id, content, votes, title, username, date, active FROM posts JOIN users ON users.id = posts.user_id ORDER BY post_id DESC")
+    posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.post_id DESC", session["user_id"])
 
     # Convert datetime string back to datetime obj
     parseAllToDatetimeObj(posts)
@@ -196,7 +196,7 @@ def newpost():
 @app.route("/post/<id>")
 @login_required
 def post(id):
-    posts = db.execute("SELECT post_id, content, votes, title, username, date, active FROM posts JOIN users ON users.id = posts.user_id WHERE post_id = ?", id)
+    posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? WHERE posts.post_id = ?", session["user_id"], id)
 
     # Check if post exists
     if len(posts) == 0:
@@ -204,7 +204,7 @@ def post(id):
         return redirect("/")
 
     parseAllToDatetimeObj(posts)
-    comments = db.execute("SELECT comments.*, users.username, users.active FROM comments JOIN users ON users.id = comments.refuser_id WHERE refpost_id = ?", id)
+    comments = db.execute("SELECT comments.*, users.username, users.active, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ?", session["user_id"], id)
     parseAllToDatetimeObj(comments)
     return render_template("post.html", posts=posts, comments=comments)
 
@@ -213,7 +213,9 @@ def post(id):
 def newcomment():
     textarea = request.get_json()
 
-    # TODO: Check if textarea["text"] is empty, if empty, redirect to post id with flashed error message
+    # Check if textarea["text"] is empty
+    # if textarea["text"] == "":
+    #     return jsonify({"status":"error"})
 
     # Check if comments count is zero to remove no comments label
     count = (db.execute("SELECT COUNT(comment_id) FROM comments WHERE refpost_id=?", textarea["post_id"]))[0]["COUNT(comment_id)"]
@@ -227,7 +229,13 @@ def newcomment():
     # Parse to string to insert into database
     created_str = created_obj.strftime("%Y-%m-%d %H:%M:%S")
 
+    # Add comment to database
     db.execute("INSERT INTO comments (refpost_id, refuser_id, comment, date) VALUES (?, ?, ?, ?)", int(textarea["post_id"]), session["user_id"], textarea["text"], created_str)
+    # Query for created comment's id
+    comment_id = (db.execute("SELECT comment_id FROM comments WHERE refuser_id=? AND date=?", session["user_id"], created_str))[0]["comment_id"]
+    textarea["comment_id"] = comment_id
+    # Upvote own comment
+    db.execute("INSERT INTO comment_votes (user_id, comment_id, vote) VALUES (?, ?, 1)", session["user_id"], comment_id)
 
     # Query for person who commented to be returned
     username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
@@ -395,6 +403,193 @@ def removepic():
         return ""
     db.execute("UPDATE users SET pic='default.jpg' WHERE id=?", session["user_id"])
     return "/static/images/profiles/default.jpg"
+
+# Upvote post or comment
+@app.route("/upvote", methods=["POST"])
+@login_required
+def upvote():
+    info = request.json
+
+    # Check if request is modified
+    if len(info) != 2 or (info["type"].lower() not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
+        print("1")
+        print(len(info) != 2)
+        print(info["type"].lower() not in ["post", "comment"])
+        print(not any(c.isdigit() for c in info["id"]))
+        return jsonify(dict(status = "error"))
+    # Continue checking
+    if "-" not in info["id"] or len(info["id"].split("-")) != 2 or not any(c.isdigit() for c in info["id"].rsplit("-")[1]):
+        print("2")
+        print("-" not in info["id"])
+        print(len(info["id"].split("-")) != 2)
+        print(not any(c.isdigit() for c in info["id"].rsplit("-")[1]))
+        return jsonify(dict(status = "error"))
+
+    info["id"] = int(info["id"].rsplit("-")[1])
+
+    # Check if post/comment exists
+    if info["type"] == "post":
+        if len(db.execute("SELECT * FROM posts WHERE post_id=?", info["id"])) == 0:
+            return jsonify(dict(status = "error"))
+    else:
+        if len(db.execute("SELECT * FROM comments WHERE comment_id=?", info["id"])) == 0:
+            return jsonify(dict(status = "error"))
+
+    # Check for whether a post or comment is upvoted
+    if info["type"] == "post":
+        isUnvote = upvotePost(info)
+
+        # Get final total votes
+        votes = (db.execute("SELECT votes FROM posts WHERE post_id=?", info["id"]))[0]["votes"]
+    else:
+        isUnvote = upvoteComment(info)
+        votes = (db.execute("SELECT votes FROM comments WHERE comment_id=?", info["id"]))[0]["votes"]
+    
+    return jsonify(dict(status = "success", votes = votes, unvote = isUnvote, id=info["id"]))
+
+# Downvote post or comment
+@app.route("/downvote", methods=["POST"])
+@login_required
+def downvote():
+    info = request.json
+    
+    # Check if request is modified
+    if len(info) != 2 or (info["type"].lower() not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
+        return jsonify(dict(status = "error"))
+    # Continue checking
+    if "-" not in info["id"] or len(info["id"].split("-")) != 2 or not any(c.isdigit() for c in info["id"].rsplit("-")[1]):
+        return jsonify(dict(status = "error"))
+
+    info["id"] = int(info["id"].rsplit("-")[1])
+
+    # Check if post/comment exists
+    if info["type"] == "post":
+        if len(db.execute("SELECT * FROM posts WHERE post_id=?", info["id"])) == 0:
+            return jsonify(dict(status = "error"))
+    else:
+        if len(db.execute("SELECT * FROM comments WHERE comment_id=?", info["id"])) == 0:
+            return jsonify(dict(status = "error"))
+
+    # Check for whether a post or comment is downvoted
+    if info["type"] == "post":
+        isUnvote = downvotePost(info)
+        votes = (db.execute("SELECT votes FROM posts WHERE post_id=?", info["id"]))[0]["votes"]
+    else:
+        isUnvote = downvoteComment(info)
+        votes = (db.execute("SELECT votes FROM comments WHERE comment_id=?", info["id"]))[0]["votes"]
+    
+    return jsonify(dict(status = "success", votes = votes, unvote = isUnvote, id=info["id"]))
+
+# Upvote post
+def upvotePost(info):
+    post_info = db.execute("SELECT * FROM post_votes WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+    isUnvote = "false"
+
+    # Check if there is no vote already made by user - post votes increase by 1
+    if len(post_info) == 0:
+        db.execute("INSERT INTO post_votes (user_id, post_id, vote) VALUES (?, ?, 1)", session["user_id"], info["id"])
+        # Update post total votes
+        db.execute("UPDATE posts SET votes = votes + 1 WHERE post_id=?", info["id"])
+    # Check if there is a vote already made by user - post votes decrease by 1
+    # Special condition
+    elif post_info[0]["vote"] == 1:
+        db.execute("UPDATE post_votes SET vote=0 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes - 1 WHERE post_id=?", info["id"])
+        isUnvote = "true"
+    # Check if there is a downvote made by user - post votes increase by 2
+    elif post_info[0]["vote"] == -1:
+        db.execute("UPDATE post_votes SET vote=1 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes + 2 WHERE post_id=?", info["id"])
+    # Check if there is no vote - post votes increase by 1
+    else:
+        db.execute("UPDATE post_votes SET vote=1 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes + 1 WHERE post_id=?", info["id"])
+    
+    return isUnvote
+
+# Upvote comment
+def upvoteComment(info):
+    comment_info = db.execute("SELECT * FROM comment_votes WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+    isUnvote = "false"
+
+    # Check if there is no vote already made by user - comment votes increase by 1
+    if len(comment_info) == 0:
+        db.execute("INSERT INTO comment_votes (user_id, comment_id, vote) VALUES (?, ?, 1)", session["user_id"], info["id"])
+        # Update comment total votes
+        db.execute("UPDATE comments SET votes = votes + 1 WHERE comment_id=?", info["id"])
+        # Get comment total votes
+    # Check if there is a vote already made by user - comment votes decrease by 1 
+    # Special condition
+    elif comment_info[0]["vote"] == 1:
+        db.execute("UPDATE comment_votes SET vote=0 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes - 1 WHERE comment_id=?", info["id"])
+        isUnvote = "true"
+    # Check if there is a downvote made by user - comment votes increase by 2
+    elif comment_info[0]["vote"] == -1:
+        db.execute("UPDATE comment_votes SET vote=1 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes + 2 WHERE comment_id=?", info["id"])
+    # Check if there is no vote - comment votes increase by 1
+    else:
+        db.execute("UPDATE comment_votes SET vote=1 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes + 1 WHERE comment_id=?", info["id"])
+
+    return isUnvote
+
+# Downvote post
+def downvotePost(info):
+    post_info = db.execute("SELECT * FROM post_votes WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+    isUnvote = "false"
+
+    # Check if there is no vote already made by user - post votes decrease by 1
+    if len(post_info) == 0:
+        db.execute("INSERT INTO post_votes (user_id, post_id, vote) VALUES (?, ?, -1)", session["user_id"], info["id"])
+        # Update post total votes
+        db.execute("UPDATE posts SET votes = votes - 1 WHERE post_id=?", info["id"])
+        # Get post total votes
+    # Check if there is a vote already made by user - post votes decrease by 2
+    elif post_info[0]["vote"] == 1:
+        db.execute("UPDATE post_votes SET vote=-1 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes - 2 WHERE post_id=?", info["id"])
+    # Check if there is a downvote made by user - post votes increase by 1
+    # Special condition
+    elif post_info[0]["vote"] == -1:
+        db.execute("UPDATE post_votes SET vote=0 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes + 1 WHERE post_id=?", info["id"])
+        isUnvote = "true"
+    # Check if there is no vote - post votes decrease by 1
+    else:
+        db.execute("UPDATE post_votes SET vote=-1 WHERE user_id=? AND post_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE posts SET votes = votes - 1 WHERE post_id=?", info["id"])
+
+    return isUnvote
+
+# Downvote comment
+def downvoteComment(info):
+    comment_info = db.execute("SELECT * FROM comment_votes WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+    isUnvote = "false"
+
+    # Check if there is no vote already made by user - comment votes decrease by 1
+    if len(comment_info) == 0:
+        db.execute("INSERT INTO comment_votes (user_id, comment_id, vote) VALUES (?, ?, -1)", session["user_id"], info["id"])
+        # Update comment total votes
+        db.execute("UPDATE comments SET votes = votes - 1 WHERE comment_id=?", info["id"])
+        # Get comment total votes
+    # Check if there is a vote already made by user - comment votes decrease by 2
+    elif comment_info[0]["vote"] == 1:
+        db.execute("UPDATE comment_votes SET vote=-1 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes - 2 WHERE comment_id=?", info["id"])
+    # Check if there is a downvote made by user - comment votes increase by 1
+    # Special condition
+    elif comment_info[0]["vote"] == -1:
+        db.execute("UPDATE comment_votes SET vote=0 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes + 1 WHERE comment_id=?", info["id"])
+        isUnvote = "true"
+    # Check if there is no vote - comment votes decrease by 1
+    else:
+        db.execute("UPDATE comment_votes SET vote=-1 WHERE user_id=? AND comment_id=?", session["user_id"], info["id"])
+        db.execute("UPDATE comments SET votes = votes - 1 WHERE comment_id=?", info["id"])
+
+    return isUnvote
 
 def parseAllToDatetimeObj(blocks):
     # Convert datetime string back to datetime obj

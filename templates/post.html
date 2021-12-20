@@ -39,38 +39,175 @@
             }
         })
 
-        // Called to unlock button after setTimeout expires
-        function unlock() {
-            locked = false;
-            toastShown = false;
-        }
+        // TODO: REFACTOR - SAME SCRIPT AS INDEX
+        $(".upvotepost").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            upvote(id, "post");
+        })
 
-        // Called when toast is clicked to hide
-        function hideToast() {
-            toast.hide();
-            toastShown = false;
-        }
+        // TODO: REFACTOR - SAME SCRIPT AS INDEX
+        $(".downvotepost").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            downvote(id, "post");
+        })
 
-        function sendRequestAddComment() {
-            // https://stackoverflow.com/questions/3730359/get-id-from-url-with-jquery
-            var url = window.location.pathname;
-            var id = url.substring(url.lastIndexOf('/') + 1);
-            $.ajax({
-                type: "POST",
-                url: "{{url_for('newcomment')}}",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify({
-                    "text": $('#commentarea').val(),
-                    "post_id": id,
-                }),
-                dataType: "json",
-                beforeSend: function () {
-                    // Disables button, hides button text and adds a spinning wheel from Bootstrap
-                    $("#commentbtn").prop("disabled", true);
-                    $("#commentbtn > .spinner-border").removeClass("visually-hidden");
-                    $("#commentbtn > .btn-text").addClass("visually-hidden");
-                },
-                success: function (data) {
+        $(".upvotecomment").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            upvote(id, "comment");
+        })
+
+        $(".downvotecomment").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            downvote(id, "comment");
+        })
+    })
+
+    // TODO: REFACTOR - SAME SCRIPT AS INDEX
+    function upvote(id, type) {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('upvote')}}",
+            contentType: "application/json; charset=UTF-8",
+            dataType: "json",
+            data: JSON.stringify({
+                "type": type,
+                "id": id
+            }),
+            success: function (data) {
+                if (data["status"] == "success") {
+                    if (type == "post") {
+                        if (data["unvote"] == "false") {
+                            upvotePost(data["id"], data);
+                        } else {
+                            renderNovotesPost(data["id"], data);
+                        }
+                    } else {
+                        if (data["unvote"] == "false") {
+                            upvoteComment(data["id"], data);
+                        } else {
+                            renderNovotesComment(data["id"], data);
+                        }
+                    }
+                } else {
+                    alert("error");
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        })
+    }
+
+    // TODO: REFACTOR - SAME SCRIPT AS INDEX
+    function downvote(id, type) {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('downvote')}}",
+            contentType: "application/json; charset=UTF-8",
+            dataType: "json",
+            data: JSON.stringify({
+                "type": type,
+                "id": id
+            }),
+            success: function (data) {
+                if (data["status"] == "success") {
+                    if (type == "post") {
+                        if (data["unvote"] == "false") {
+                            downvotePost(data["id"], data);
+                        } else {
+                            renderNovotesPost(data["id"], data);
+                        }
+                    } else {
+                        if (data["unvote"] == "false") {
+                            downvoteComment(data["id"], data);
+                        } else {
+                            renderNovotesComment(data["id"], data);
+                        }
+                    }
+                } else {
+                    alert("error");
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        })
+    }
+
+    // for posts
+    function upvotePost(id, data) {
+        $("#postdownvote-".concat(id).concat(" ,", "#posticon-" + id)).removeClass("downvote-color");
+        $("#postupvote-".concat(id).concat(" ,", "#posticon-" + id)).addClass("upvote-color");
+        $("#posticon-" + id).text(data["votes"]);
+    }
+
+    function downvotePost(id, data) {
+        $("#postupvote-".concat(id).concat(" ,", "#posticon-" + id)).removeClass("upvote-color");
+        $("#postdownvote-".concat(id).concat(" ,", "#posticon-" + id)).addClass("downvote-color");
+        $("#posticon-" + id).text(data["votes"]);
+    }
+
+    function renderNovotesPost(id, data) {
+        $("#postdownvote-".concat(id).concat(" ,", "#posticon-" + id)).removeClass("downvote-color");
+        $("#postupvote-".concat(id).concat(" ,", "#posticon-" + id)).removeClass("upvote-color");
+        $("#posticon-" + id).text(data["votes"]);
+    }
+
+    // for comments
+    function upvoteComment(id, data) {
+        $("#commentdownvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("downvote-color");
+        $("#commentupvote-".concat(id).concat(" ,", "#commenticon-" + id)).addClass("upvote-color");
+        $("#commenticon-" + id).text(data["votes"]);
+    }
+
+    function downvoteComment(id, data) {
+        $("#commentupvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("upvote-color");
+        $("#commentdownvote-".concat(id).concat(" ,", "#commenticon-" + id)).addClass("downvote-color");
+        $("#commenticon-" + id).text(data["votes"]);
+    }
+
+    // TODO: REFACTOR - SAME SCRIPT AS INDEX
+    function renderNovotesComment(id, data) {
+        $("#commentdownvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("downvote-color");
+        $("#commentupvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("upvote-color");
+        $("#commenticon-" + id).text(data["votes"]);
+    }
+
+    // Called to unlock button after setTimeout expires
+    function unlock() {
+        locked = false;
+        toastShown = false;
+    }
+
+    // Called when toast is clicked to hide
+    function hideToast() {
+        toast.hide();
+        toastShown = false;
+    }
+
+    function sendRequestAddComment() {
+        // https://stackoverflow.com/questions/3730359/get-id-from-url-with-jquery
+        var url = window.location.pathname;
+        var id = url.substring(url.lastIndexOf('/') + 1);
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('newcomment')}}",
+            contentType: "application/json; charset=UTF-8",
+            data: JSON.stringify({
+                "text": $('#commentarea').val(),
+                "post_id": id,
+            }),
+            dataType: "json",
+            beforeSend: function () {
+                // Disables button, hides button text and adds a spinning wheel from Bootstrap
+                $("#commentbtn").prop("disabled", true);
+                $("#commentbtn > .spinner-border").removeClass("visually-hidden");
+                $("#commentbtn > .btn-text").addClass("visually-hidden");
+            },
+            success: function (data) {
+                if (data["status"] == "error") {
+                    alert("error: text field empty");
+                } else {
                     // Remove no comment label if it exists
                     if (data["nocomments"] == "true") {
                         $(".nocomments").remove();
@@ -87,33 +224,93 @@
                                     <div class="col my-4 mx-2 order-sm-first order-first">
                                         <div style="font-size: 12px">
                                             <span class="fw-bold">${data["username"]} 
-                                                ${isOP() ? `<span class="text-primary">OP</span>` : ''}
-                                                    </span> 
-                                                &#183; <span class="text-muted">just now</span>
+                                            ${isOP() ? `<span class="text-primary">OP</span>` : ''} </span>
+                                            &#183; <span class="text-muted">just now</span>
                                         </div>
                                         <div class="text-box text-break">
                                             ${data["text"]}
                                         </div>
-                                        <div class="fw-bold" style="font-size: 11px">
-                                            1
+                                        <div id="votebox2" class="hstack">
+                                            <div>
+                                                <button id="commentupvote-${data['comment_id']}"
+                                                    class="upvote upvotecomment btn btn-sm mx-1 upvote-color">
+                                                    <i class="fas fa-caret-up fa-2x"></i>
+                                                </button>
+                                            </div>
+                                            <div id="commenticon-${data['comment_id']}" class="fw-bold upvote-color" style="font-size: 11px;">
+                                                1
+                                            </div>
+                                            <div>
+                                                <button id="commentdownvote-${data['comment_id']}"
+                                                    class="downvote downvotecomment btn btn-sm mx-1">
+                                                    <i class="fas fa-caret-down fa-2x"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>`
                     document.querySelector(".top-hr").insertAdjacentHTML('afterend', str);
-                },
-                error: function (e) {
-                    console.log(e);
-                },
-                complete: function () {
-                    // Clears text area, removes spinning wheel and restore button text
-                    $("#commentarea").val("");
-                    $("#commentbtn > .spinner-border").addClass("visually-hidden");
-                    $("#commentbtn > .btn-text").removeClass("visually-hidden");
                 }
-            });
-        }
-    })
+            },
+            error: function (e) {
+                console.log(e);
+            },
+            complete: function () {
+                // Clears text area, removes spinning wheel and restore button text
+                $("#commentarea").val("");
+                $("#commentbtn > .spinner-border").addClass("visually-hidden");
+                $("#commentbtn > .btn-text").removeClass("visually-hidden");
+            }
+        });
+    }
 </script>
+{% endblock %}
+
+<!-- TODO: REFACTOR STYLES - SAME STYLESHEET AS INDEX -->
+{% block style %}
+<style>
+    .a-post {
+        border: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .a-post:hover {
+        border: 1px solid rgba(0, 0, 0, 0.7);
+        cursor: pointer;
+    }
+
+    #votebox {
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media screen and (max-width: 768px) {
+        #votebox {
+            flex-direction: row;
+        }
+    }
+
+    .upvote,
+    .downvote {
+        padding: 0;
+        height: 20px;
+        width: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .upvote:hover,
+    .downvote:hover {
+        background: rgb(232, 232, 232);
+    }
+
+    .upvote-color {
+        color: rgb(255, 69, 0) !important;
+    }
+
+    .downvote-color {
+        color: rgb(113, 147, 255) !important;
+    }
+</style>
 {% endblock %}
 
 {% block manualflash %}
@@ -131,11 +328,56 @@
 
 {% block main %}
 
+{% for post in posts %}
 <div class="bg-white p-2 mb-3 rounded a-post">
     <div class="row">
-        <div class="col-md-1 stretch order-md-first">TEST</div>
+        <div class="col-md-1 stretch order-md-first">
+            <div id="votebox" class="d-flex align-items-center">
+                {% if post["vote"] == -1 %}
+                <div>
+                    <button id="postupvote-{{post['post_id']}}" class="upvote upvotepost btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="posticon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                    post["votes"] }}</div>
+                <div>
+                    <button id="postdownvote-{{post['post_id']}}"
+                        class="downvote downvotepost btn btn-sm mx-1 downvote-color">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% elif post["vote"] == 1 %}
+                <div>
+                    <button id="postupvote-{{post['post_id']}}" class="upvote upvotepost btn btn-sm mx-1 upvote-color">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="posticon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                    {{ post["votes"] }}</div>
+                <div>
+                    <button id="postdownvote-{{post['post_id']}}" class="downvote downvotepost btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div>
+                    <button id="postupvote-{{post['post_id']}}" class="upvote upvotepost btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="posticon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}
+                </div>
+                <div>
+                    <button id="postdownvote-{{post['post_id']}}" class="downvote downvotepost btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <div class="col order-sm-first order-first">
-            {% for post in posts %}
             <div class="text-muted" style="font-size: small">
                 Posted by {% if post["active"] == 1 %} {{ post["username"] }} {% else %} [deleted] {% endif %}
                 {{ moment(post["date"]).fromNow() }}
@@ -146,13 +388,10 @@
             <div class="small text-box text-break">
                 {% if post["active"] == 1 %} {{ post["content"] }} {% else %} [deleted] {% endif %}
             </div>
-            <div>
-                {{ post["votes"] }}
-            </div>
-            {% endfor %}
         </div>
     </div>
 </div>
+{% endfor %}
 
 <div class="bg-white p-2 mb-3 rounded a-post">
     <div class="row">
@@ -185,14 +424,60 @@
             <div class="text-box text-break">
                 {{ comment["comment"] }}
             </div>
-            <div class="fw-bold" style="font-size: 11px">
-                {{ comment["votes"] }}
+            <div id="votebox2" class="hstack">
+                {% if comment["vote"] == -1 %}
+                <div>
+                    <button id="commentupvote-{{comment['comment_id']}}" class="upvote upvotecomment btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="commenticon-{{comment['comment_id']}}" class="fw-bold downvote-color" style="font-size: 11px;">
+                    {{ comment["votes"] }}
+                </div>
+                <div>
+                    <button id="commentdownvote-{{comment['comment_id']}}"
+                        class="downvote downvotecomment btn btn-sm mx-1 downvote-color">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% elif comment["vote"] == 1 %}
+                <div>
+                    <button id="commentupvote-{{comment['comment_id']}}"
+                        class="upvote upvotecomment btn btn-sm mx-1 upvote-color">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="commenticon-{{comment['comment_id']}}" class="fw-bold upvote-color" style="font-size: 11px;">
+                    {{ comment["votes"] }}
+                </div>
+                <div>
+                    <button id="commentdownvote-{{comment['comment_id']}}"
+                        class="downvote downvotecomment btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div>
+                    <button id="commentupvote-{{comment['comment_id']}}" class="upvote upvotecomment btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="commenticon-{{comment['comment_id']}}" class="fw-bold" style="font-size: 11px;">
+                    {{ comment["votes"] }}
+                </div>
+                <div>
+                    <button id="commentdownvote-{{comment['comment_id']}}"
+                        class="downvote downvotecomment btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
     {% endif %}
     {% endfor %}
-    
+
     {% if not comments %}
     <div class="row nocomments">
         <div class="col-md-4"></div>

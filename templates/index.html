@@ -11,11 +11,126 @@
         cursor: pointer;
     }
 
-    .fas {
-        color: salmon;
-        font-size: 30px;
+    #votebox {
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media screen and (max-width: 768px) {
+        #votebox {
+            flex-direction: row;
+        }
+    }
+
+    .upvote,
+    .downvote {
+        padding: 0;
+        height: 20px;
+        width: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .upvote:hover,
+    .downvote:hover {
+        background: rgb(232, 232, 232);
+    }
+
+    .upvote-color {
+        color: rgb(255, 69, 0) !important;
+    }
+
+    .downvote-color {
+        color: rgb(113, 147, 255) !important;
     }
 </style>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $(".upvote").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            upvote(id);
+        })
+        $(".downvote").on("click", function (event) {
+            var id = $(event.currentTarget).prop("id");
+            downvote(id);
+        })
+    })
+
+    function upvote(id) {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('upvote')}}",
+            contentType: "application/json; charset=UTF-8",
+            dataType: "json",
+            data: JSON.stringify({
+                "type": "post",
+                "id": id
+            }),
+            success: function (data) {
+                if (data["status"] == "success") {
+                    if (data["unvote"] == "false") {
+                        upvotePost(data["id"], data);
+                    } else {
+                        renderNovotes(data["id"], data);
+                    }
+                } else {
+                    alert("error");
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        })
+    }
+
+    function downvote(id) {
+        $.ajax({
+            type: "POST",
+            url: "{{url_for('downvote')}}",
+            contentType: "application/json; charset=UTF-8",
+            dataType: "json",
+            data: JSON.stringify({
+                "type": "post",
+                "id": id
+            }),
+            success: function (data) {
+                if (data["status"] == "success") {
+                    if (data["unvote"] == "false") {
+                        downvotePost(data["id"], data);
+                    } else {
+                        renderNovotes(data["id"], data);
+                    }
+                } else {
+                    alert("error");
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        })
+    }
+
+    function upvotePost(id, data) {
+        $("#downvote-".concat(id).concat(" ,", "#icon-" + id)).removeClass("downvote-color");
+        $("#upvote-".concat(id).concat(" ,", "#icon-" + id)).addClass("upvote-color");
+        $("#icon-" + id).text(data["votes"]);
+    }
+
+    function downvotePost(id, data) {
+        $("#upvote-".concat(id).concat(" ,", "#icon-" + id)).removeClass("upvote-color");
+        $("#downvote-".concat(id).concat(" ,", "#icon-" + id)).addClass("downvote-color");
+        $("#icon-" + id).text(data["votes"]);
+    }
+
+    function renderNovotes(id, data) {
+        $("#downvote-".concat(id).concat(" ,", "#icon-" + id)).removeClass("downvote-color");
+        $("#upvote-".concat(id).concat(" ,", "#icon-" + id)).removeClass("upvote-color");
+        $("#icon-" + id).text(data["votes"]);
+    }
+</script>
 {% endblock %}
 
 {% block main %}
@@ -25,13 +140,49 @@
 {% for post in posts %}
 {% if post["active"] == 1 %}
 <div class="bg-white p-2 mb-2 rounded a-post">
-    <a id="openpost" href="{{url_for('post', id=post['post_id'])}}">Temp link</a>
+    <a href="{{url_for('post', id=post['post_id'])}}">Temp link</a>
     <div class="row">
         <div class="col-md-1 stretch order-md-first">
-            <div class="vstack" style="text-align: center;">
-                <div><i class="fas fa-caret-up"></i></div>
-                <div>TEST</div>
-                <div><i class="fas fa-caret-down"></i></div>
+            <div id="votebox" class="d-flex align-items-center">
+                {% if post["vote"] == -1 %}
+                <div>
+                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                    post["votes"] }}</div>
+                <div>
+                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1 downvote-color">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% elif post["vote"] == 1 %}
+                <div>
+                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1 upvote-color">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                    {{ post["votes"] }}</div>
+                <div>
+                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div>
+                    <button id="upvote-{{post['post_id']}}" class="upvote btn btn-sm mx-1">
+                        <i class="fas fa-caret-up fa-2x"></i>
+                    </button>
+                </div>
+                <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}</div>
+                <div>
+                    <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
+                        <i class="fas fa-caret-down fa-2x"></i>
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -52,9 +203,6 @@
                 {{ post["content"][:(850-(post["title"] | length))] }}
             </div>
             {% endif %}
-            <div>
-                {{ post["votes"] }}
-            </div>
         </div>
     </div>
 </div>
