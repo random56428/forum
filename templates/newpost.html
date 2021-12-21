@@ -9,7 +9,7 @@
     }
 
     #lettercounter {
-        font-size: 11px;
+        font-size: 10px;
     }
 </style>
 {% endblock %}
@@ -28,22 +28,20 @@
 
 {% block main %}
 
-<!--TODO: Add limit on number of characters in title-->
-<!--TODO: Add validators for client side-->
 <!--TODO: Add autoresizable to title area and text area-->
-<h5 class="mb-3">Create a post</h5>
+<div class="mb-3 fw-bold">Create a post</div>
 <hr style="border: 1px solid white">
 <div class="bg-white p-3 rounded">
     <form action="{{url_for('newpost')}}" method="post">
         <div class="input-group mb-3">
-            <input type="text" id="titleform" class="form-control" placeholder="Title" name="title" required
+            <input type="text" id="titleform" class="form-control form-control-sm" placeholder="Title" name="title" required
                 maxlength="300" style="border-right: 0;">
-            <span id="lettercounter" class="input-group-text bg-transparent text-muted"><span id="counter">0</span>/300</span>
+            <span id="lettercounter" class="input-group-text bg-transparent text-muted fw-bold"><span id="counter">0</span>/300</span>
         </div>
         <div class="mb-3">
-            <textarea class="form-control" rows="6" placeholder="Text (optional)" name="text"></textarea>
+            <textarea class="form-control form-control-sm" rows="6" placeholder="Text (optional)" name="text"></textarea>
         </div>
-        <button type="submit" class="btn btn-outline-secondary">Post</button>
+        <button type="submit" class="btn btn-outline-secondary btn-sm">Post</button>
     </form>
 </div>
 

@@ -44,7 +44,6 @@
         .navbar-btn {
             background-color: rgba(0, 0, 0, 0);
             border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 25px;
             transition: 0.2s;
         }
 
@@ -56,6 +55,10 @@
         .dropdown-divider {
             padding: 0;
             margin: 0;
+        }
+
+        .dropdown-item {
+            font-size: 15px;
         }
     </style>
 
@@ -72,10 +75,10 @@
                 {% if not session["user_id"] %}
                 <div class="navbar-nav">
                     <div class="nav-item">
-                        <a class="btn px-3 navbar-btn" role="button" href="{{url_for('login')}}">Log in</a>
+                        <a class="btn px-3 navbar-btn rounded-pill btn-sm" role="button" href="{{url_for('login')}}">Log in</a>
                     </div>
                     <div class="nav-item">
-                        <a class="btn px-3 ms-2 navbar-btn" role="button" href="{{url_for('register')}}">Sign up</a>
+                        <a class="btn px-3 ms-2 navbar-btn rounded-pill btn-sm" role="button" href="{{url_for('register')}}">Sign up</a>
                     </div>
                 </div>
                 {% else %}
@@ -83,15 +86,16 @@
                 <div class="navbar-nav dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <span style="font-size: 14px;">{{ username }}</span>
+                        <img id="static-pic" src="{{ pic }}" class="img-fluid rounded-circle" style="width: 25px;">
+                        <span style="font-size: 13px;">{{ username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item py-2" href="{{url_for('profile', user=username)}}">Profile</a></li>
-                        <li><a class="dropdown-item py-2" href="{{url_for('settings')}}">Settings</a></li>
+                        <li><a class="dropdown-item py-1" href="{{url_for('profile', user=username)}}">Profile</a></li>
+                        <li><a class="dropdown-item py-1" href="{{url_for('settings')}}">Settings</a></li>
                         <li class="d-flex justify-content-center">
                             <hr class="dropdown-divider" style="width: 80%;">
                         </li>
-                        <li><a class="dropdown-item py-2" href="{{url_for('logout')}}">Logout</a></li>
+                        <li><a class="dropdown-item py-1" href="{{url_for('logout')}}">Logout</a></li>
                     </ul>
                 </div>
                 {% endif %}

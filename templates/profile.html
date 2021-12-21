@@ -19,6 +19,10 @@
     .profile-container:hover {
         border: 1px solid rgba(0, 0, 0, 0.7);
     }
+
+    .stat-type {
+        font-size: 14px;
+    }
 </style>
 {% endblock %}
 
@@ -38,22 +42,22 @@
 
 <div class="profile-container bg-white p-5 rounded">
     <div class="d-flex justify-content-center">
-        <img src="{{pic}}" id="profilepic" class="img-thumbnail rounded-circle"
+        <img src="{{picture}}" id="profilepic" class="img-thumbnail rounded-circle"
             style="width: 120px; height: 120px; object-fit: cover;">
     </div>
     <div class="d-flex justify-content-center mb-4">@{{ user }}</div>
     <div class="row text-center justify-content-evenly">
-        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-1">
             <div>{{ total_rep }}</div>
-            <div>Rep</div>
+            <div class="stat-type">Rep</div>
         </div>
-        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-1">
             <div>{{ post_contribution }}</div>
-            <div>Posts</div>
+            <div class="stat-type">Posts</div>
         </div>
-        <div class="col-lg-3 col-sm-5 bg-light m-1 p-2">
+        <div class="col-lg-3 col-sm-5 bg-light m-1 p-1">
             <div>{{ comment_contribution }}</div>
-            <div>Comments</div>
+            <div class="stat-type">Comments</div>
         </div>
     </div>
 </div>

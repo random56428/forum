@@ -4,7 +4,7 @@ from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
-from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError, RequestEntityTooLarge
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 from flask_moment import Moment
@@ -48,7 +48,8 @@ moment = Moment(app)
 @app.context_processor
 def inject_user():
     if "user_id" in session:
-        user_info = (db.execute("SELECT username FROM users WHERE id=?", session["user_id"]))[0]
+        user_info = (db.execute("SELECT username, pic FROM users WHERE id=?", session["user_id"]))[0]
+        user_info["pic"] = "/static/images/profiles/" + user_info["pic"]
         return user_info
     return dict()
 
@@ -183,11 +184,16 @@ def newpost():
 
         # Check if title > 300 letters
         if len(title) > 300:
-            flash("Title input is greater than 300.", "danger")
+            flash("Title input is greater than 300 characters.", "danger")
             return render_template("newpost.html")
         
         # Get text area value if it exists
         text = request.form.get("text")
+
+        # Check for hard limit of 40000 characters for text field
+        if len(text) >= 40000:
+            flash("Text field must be less than 40000 characters.", "danger")
+            return render_template("newpost.html")
 
         # Create datetime obj as string for when post is created
         created = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -240,8 +246,8 @@ def newcomment():
     textarea = request.get_json()
 
     # Check if textarea["text"] is empty
-    # if textarea["text"] == "":
-    #     return jsonify({"status":"error"})
+    if textarea["text"] == "":
+        return jsonify(dict(status = "error"))
 
     # Check if comments count is zero to remove no comments label
     count = (db.execute("SELECT COUNT(comment_id) FROM comments WHERE refpost_id=?", textarea["post_id"]))[0]["COUNT(comment_id)"]
@@ -313,14 +319,14 @@ def profile(user):
     # Calculate total reputation for given user
     post_votes = db.execute("SELECT votes FROM posts WHERE user_id=?", user_id)
     comment_votes = db.execute("SELECT votes FROM comments WHERE refuser_id=?", user_id)
-    post_count = db.execute("SELECT COUNT(votes) FROM posts WHERE user_id=?", user_id)
-    comment_count = db.execute("SELECT COUNT(votes) FROM comments WHERE refuser_id=?", user_id)
+    post_count = len(post_votes)
+    comment_count = len(comment_votes)
     total_rep = 0
     for post in post_votes:
         total_rep += post["votes"]
     for comment in comment_votes:
         total_rep += comment["votes"]
-    total_rep -= (post_count[0]["COUNT(votes)"] + comment_count[0]["COUNT(votes)"])
+    total_rep -= (post_count + comment_count)
 
     # Calculate total post contributions
     post_contribution = (db.execute("SELECT COUNT(*) FROM posts WHERE user_id=?", user_id))[0]["COUNT(*)"]
@@ -328,7 +334,7 @@ def profile(user):
     # Calculate total comment contributions
     comment_contribution = (db.execute("SELECT COUNT(*) FROM comments WHERE refuser_id=?", user_id))[0]["COUNT(*)"]
 
-    return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user, pic=pic)
+    return render_template("profile.html", total_rep=total_rep, post_contribution=post_contribution, comment_contribution=comment_contribution, user=user, picture=pic)
 
 # Settings for logged in user
 @app.route("/settings")
@@ -338,7 +344,7 @@ def settings():
     # Query for profile picture of logged in user
     pic = "/static/images/profiles/" + (db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"]
 
-    return render_template("settings.html", pic=pic)
+    return render_template("settings.html", picture=pic)
 
 # Change password
 @app.route("/changepass", methods=["POST"])
@@ -415,7 +421,7 @@ def uploadpic():
     # Store file in web server
     file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-    # Get new profile picture
+    # Get new profile picture link
     newpic = "/static/images/profiles/" + filename
 
     return jsonify(dict(msg = "", status="success", newpic=newpic))
@@ -438,17 +444,9 @@ def upvote():
 
     # Check if request is modified
     if len(info) != 2 or (info["type"].lower() not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
-        print("1")
-        print(len(info) != 2)
-        print(info["type"].lower() not in ["post", "comment"])
-        print(not any(c.isdigit() for c in info["id"]))
         return jsonify(dict(status = "error"))
     # Continue checking
     if "-" not in info["id"] or len(info["id"].split("-")) != 2 or not any(c.isdigit() for c in info["id"].rsplit("-")[1]):
-        print("2")
-        print("-" not in info["id"])
-        print(len(info["id"].split("-")) != 2)
-        print(not any(c.isdigit() for c in info["id"].rsplit("-")[1]))
         return jsonify(dict(status = "error"))
 
     info["id"] = int(info["id"].rsplit("-")[1])

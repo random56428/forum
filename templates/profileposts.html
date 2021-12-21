@@ -198,7 +198,7 @@
                                 <i class="fas fa-caret-up fa-2x"></i>
                             </button>
                         </div>
-                        <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                        <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 11px;">{{
                             post["votes"] }}</div>
                         <div>
                             <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1 downvote-color">
@@ -211,7 +211,7 @@
                                 <i class="fas fa-caret-up fa-2x"></i>
                             </button>
                         </div>
-                        <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                        <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 11px;">
                             {{ post["votes"] }}</div>
                         <div>
                             <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
@@ -224,7 +224,7 @@
                                 <i class="fas fa-caret-up fa-2x"></i>
                             </button>
                         </div>
-                        <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}
+                        <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 11px;">{{ post["votes"] }}
                         </div>
                         <div>
                             <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
@@ -237,10 +237,10 @@
             </div>
 
             <div class="col-12 col-md order-first order-md-last ps-3 ps-md-0">
-                <div class="h5 text-break">
+                <div class="text-break fw-bold" style="font-size: 15px;">
                     {{ post["title"] }}
                 </div>
-                <div class="text-muted" style="font-size: small">
+                <div class="text-muted" style="font-size: 11px;">
                     Posted by <a class="profile-link text-muted" href="{{url_for('profile', user=user)}}">
                         {{ user }}</a> {{ moment(post["date"]).fromNow() }}
                 </div>
@@ -253,11 +253,11 @@
 
 {% if not posts %}
 <div class="row nocomments">
-    <div class="col-md-4"></div>
-    <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
+    <div class="col-md-3"></div>
+    <div class="col text-break d-flex justify-content-center align-items-center fw-bold" style="height: 400px; font-size: 17px;">
         @{{user}} hasn't posted anything
     </div>
-    <div class="col-md-4"></div>
+    <div class="col-md-3"></div>
 </div>
 {% endif %}
 

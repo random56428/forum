@@ -61,7 +61,7 @@
             },
             success: function (data) {
                 if (data != "") {
-                    $("#profilepic").prop("src", data);
+                    $("#profilepic, #static-pic").prop("src", data);
                 }
             },
             error: function (e) {
@@ -95,7 +95,7 @@
                 } else {
                     $("#statusmsg-pic").text(data["msg"]);
                     $("#statusmsg-pic").css("color", "green");
-                    $("#profilepic").prop("src", data["newpic"]);
+                    $("#profilepic, #static-pic").prop("src", data["newpic"]);
                 }
             },
             error: function (e) {
@@ -222,7 +222,7 @@
 {% endblock %}
 
 {% block main %}
-<h5 class="mb-3">Settings</h5>
+<div class="mb-3 fw-bold">Settings</div>
 <div class="bg-white p-1">
     <div>
         <div class="headings text-muted fw-bold">PROFILE</div>
@@ -232,7 +232,7 @@
         <div>
             <div class="my-2 col-12 col-lg-8 col-md-9 d-flex justify-content-md-start justify-content-center">
                 <div class="d-flex align-items-center justify-content-center">
-                    <img src="{{pic}}" id="profilepic" class="img-thumbnail rounded-circle mb-1"
+                    <img src="{{picture}}" id="profilepic" class="img-thumbnail rounded-circle mb-1"
                         style="width: 120px; height: 120px; object-fit: cover;">
                     <span id="pic-loading" class="spinner-border visually-hidden" role="status" aria-hidden="true"
                         style="position: absolute;"></span>

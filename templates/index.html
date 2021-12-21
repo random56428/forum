@@ -155,11 +155,6 @@
         $("#upvote-".concat(id).concat(" ,", "#icon-" + id)).removeClass("upvote-color");
         $("#icon-" + id).text(data["votes"]);
     }
-
-    function test(string) {
-        console.log("POST CLICKED");
-        // window.location = string;
-    }
 </script>
 {% endblock %}
 
@@ -180,7 +175,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                    <div id="icon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 11px;">{{
                         post["votes"] }}</div>
                     <div>
                         <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1 downvote-color">
@@ -193,7 +188,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                    <div id="icon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 11px;">
                         {{ post["votes"] }}</div>
                     <div>
                         <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
@@ -206,7 +201,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}
+                    <div id="icon-{{post['post_id']}}" class="fw-bold" style="font-size: 11px;">{{ post["votes"] }}
                     </div>
                     <div>
                         <button id="downvote-{{post['post_id']}}" class="downvote btn btn-sm mx-1">
@@ -219,11 +214,11 @@
         </div>
 
         <div class="col-12 col-md order-first order-md-last ps-3 ps-md-0">
-            <div class="text-muted" style="font-size: small">
+            <div class="text-muted" style="font-size: 11px;">
                 Posted by <a class="profile-link text-muted" href="{{url_for('profile', user=post['username'])}}">
                     {{ post["username"] }}</a> {{ moment(post["date"]).fromNow() }}
             </div>
-            <div class="h5 text-break">
+            <div class="text-break fw-bold" style="font-size: 15px;">
                 {{ post["title"] }}
             </div>
             {% if (post["content"] | length) >= 200 %}

@@ -361,7 +361,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="posticon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 13px;">{{
+                    <div id="posticon-{{post['post_id']}}" class="fw-bold downvote-color" style="font-size: 11px;">{{
                         post["votes"] }}</div>
                     <div>
                         <button id="postdownvote-{{post['post_id']}}"
@@ -376,7 +376,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="posticon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 13px;">
+                    <div id="posticon-{{post['post_id']}}" class="fw-bold upvote-color" style="font-size: 11px;">
                         {{ post["votes"] }}</div>
                     <div>
                         <button id="postdownvote-{{post['post_id']}}" class="downvote downvotepost btn btn-sm mx-1">
@@ -389,7 +389,7 @@
                             <i class="fas fa-caret-up fa-2x"></i>
                         </button>
                     </div>
-                    <div id="posticon-{{post['post_id']}}" class="fw-bold" style="font-size: 13px;">{{ post["votes"] }}
+                    <div id="posticon-{{post['post_id']}}" class="fw-bold" style="font-size: 11px;">{{ post["votes"] }}
                     </div>
                     <div>
                         <button id="postdownvote-{{post['post_id']}}" class="downvote downvotepost btn btn-sm mx-1">
@@ -402,14 +402,14 @@
         </div>
 
         <div class="col-12 col-md order-first order-md-last ps-3 ps-md-0">
-            <div class="text-muted" style="font-size: small">
+            <div class="text-muted" style="font-size: 11px;">
                 Posted by {% if post["active"] == 1 %}
                 <a class="profile-link text-muted" href="{{url_for('profile', user=post['username'])}}">{{
                     post["username"] }}</a>
                 {% else %} [deleted] {% endif %}
                 {{ moment(post["date"]).fromNow() }}
             </div>
-            <div class="h5 text-break">
+            <div class="text-break fw-bold" style="font-size: 15px;">
                 {{ post["title"] }}
             </div>
             <div class="small text-box text-break">
@@ -426,9 +426,9 @@
             <div class="col-md-1"></div>
         </div>
         <div class="col">
-            <textarea id="commentarea" class="form-control my-4" rows="5" placeholder="Place your comments here!"
+            <textarea id="commentarea" class="form-control form-control-sm my-4" rows="5" placeholder="Place your comments here!"
                 name="PLACEHOLDER"></textarea>
-            <button id="commentbtn" class="btn btn-outline-secondary" disabled>
+            <button id="commentbtn" class="btn btn-outline-secondary btn-sm" disabled>
                 <span class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
                 <span class="btn-text">Comment</span>
             </button>
@@ -452,14 +452,13 @@
         </div>
         <div class="col my-3 ps-0">
             <div style="font-size: 12px">
-                <span class="fw-bold">
-                    <a class="profile-link black-text" href="{{url_for('profile', user=comment['username'])}}">{{
-                        comment["username"] }}</a>
-                    {% if posts[0]["username"] == comment["username"] %}
-                    <span class="text-primary">OP</span> {% endif%} </span>
+                <a class="profile-link black-text" href="{{url_for('profile', user=comment['username'])}}"
+                    style="font-size: 11px;">{{ comment["username"] }}</a>
+                {% if posts[0]["username"] == comment["username"] %}
+                <span class="text-primary fw-bold">OP</span> {% endif%}
                 &#183; <span class="text-muted">{{ moment(comment["date"]).fromNow() }}</span>
             </div>
-            <div class="text-box text-break">
+            <div class="text-box text-break" style="font-size: 14px;">
                 {{ comment["comment"] }}
             </div>
             <div id="votebox2" class="hstack">
@@ -519,7 +518,7 @@
     {% if not comments %}
     <div class="row nocomments">
         <div class="col-md-4"></div>
-        <div class="col h3 fw-light text-break d-flex justify-content-center align-items-center" style="height: 400px;">
+        <div class="col text-break d-flex justify-content-center align-items-center fw-bold text-muted" style="height: 400px; font-size: 17px;">
             No Comments Here
         </div>
         <div class="col-md-4"></div>
@@ -530,7 +529,7 @@
 {% if scroll %}
 <script>
     var comment = document.querySelector("{{ scroll }}");
-    comment.style.background = "rgb(242,248,253)";
+    comment.style.background = "rgb(242, 248, 253)";
     comment.scrollIntoView();
 </script>
 {% endif %}
