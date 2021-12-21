@@ -177,8 +177,13 @@ def newpost():
 
         # Check if title is empty
         title = request.form.get("title")
-        if not title:
+        if not title or len(title) == 0:
             flash("Title input is blank.", "danger")
+            return render_template("newpost.html")
+
+        # Check if title > 300 letters
+        if len(title) > 300:
+            flash("Title input is greater than 300.", "danger")
             return render_template("newpost.html")
         
         # Get text area value if it exists
@@ -198,8 +203,14 @@ def newpost():
         return render_template("newpost.html")
 
 @app.route("/post/<id>")
+@app.route("/post/<id>/<scroll>")
 @login_required
-def post(id):
+def post(id, scroll = None):
+    # Check if scroll comment exists
+    if scroll and len(db.execute("SELECT comment_id FROM comments WHERE comment_id=?", scroll)) == 0:
+        flash("Comment does not exist.", "danger")
+        return redirect("/")
+
     posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? WHERE posts.post_id = ?", session["user_id"], id)
 
     # Check if post exists
@@ -207,9 +218,20 @@ def post(id):
         flash("Post does not exist.", "danger")
         return redirect("/")
 
+    # If scroll exists, check if comment matches post
+    if scroll and len(db.execute("SELECT * FROM comments WHERE comment_id=? AND refpost_id=?", scroll, id)) == 0:
+        flash("Comment does not exist.", "danger")
+        return redirect("/")
+
     parseAllToDatetimeObj(posts)
-    comments = db.execute("SELECT comments.*, users.username, users.active, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ?", session["user_id"], id)
+    comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ?", session["user_id"], id)
     parseAllToDatetimeObj(comments)
+    
+    # https://stackoverflow.com/questions/31863582/automatically-scroll-to-a-div-when-flask-returns-rendered-template
+    # If scroll endpoint is defined, scroll to comment
+    if scroll:
+        return render_template("post.html", posts=posts, comments=comments, scroll=("#comment-" + scroll))
+
     return render_template("post.html", posts=posts, comments=comments)
 
 @app.route("/newcomment", methods=["POST"])
@@ -273,13 +295,13 @@ def profile(user):
 
     if request.endpoint == "profile-posts":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-        posts = db.execute("SELECT post_id, votes, title, date FROM posts WHERE user_id=? ORDER BY post_id DESC", user_id)
+        posts = db.execute(" SELECT posts.post_id, votes, title, date, vote FROM posts LEFT JOIN post_votes ON post_votes.post_id=posts.post_id WHERE posts.user_id=? ORDER BY posts.post_id DESC", user_id)
         parseAllToDatetimeObj(posts)
         return render_template("profileposts.html", posts=posts, user=user)
     elif request.endpoint == "profile-comments":
         # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
         # DEMO: SELECT comments.*, posts.title, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
-        comments = db.execute("SELECT comments.*, posts.title, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
+        comments = db.execute("SELECT comments.*, posts.title, posts.post_id, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
         parseAllToDatetimeObj(comments)
         return render_template("profilecomments.html", comments=comments, user=user)
 

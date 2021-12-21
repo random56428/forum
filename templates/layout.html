@@ -22,11 +22,13 @@
     <!--Part of flask_moment to display datetime-->
     {{ moment.include_moment() }}
 
-    {% block style %}{% endblock %}
-
     <style>
         * {
             font-family: Verdana, Arial, Helvetica, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .form-control:focus {
@@ -56,6 +58,9 @@
             margin: 0;
         }
     </style>
+
+    {% block style %}{% endblock %}
+
 </head>
 
 <body style="background-color: #dae0e6;">

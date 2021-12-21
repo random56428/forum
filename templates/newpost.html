@@ -1,5 +1,31 @@
 {% extends "layout.html" %}
 
+{% block style %}
+<style>
+    #titleform:focus+#lettercounter {
+        border-color: #000000;
+        box-shadow: none;
+        animation-delay: 0ms;
+    }
+
+    #lettercounter {
+        font-size: 11px;
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        counter = $("#counter");
+        
+        $("#titleform").on("keyup keydown", function () {
+            counter.text($(this).val().length);
+        });
+    })
+</script>
+{% endblock %}
+
 {% block main %}
 
 <!--TODO: Add limit on number of characters in title-->
@@ -9,8 +35,10 @@
 <hr style="border: 1px solid white">
 <div class="bg-white p-3 rounded">
     <form action="{{url_for('newpost')}}" method="post">
-        <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Title" name="title" required>
+        <div class="input-group mb-3">
+            <input type="text" id="titleform" class="form-control" placeholder="Title" name="title" required
+                maxlength="300" style="border-right: 0;">
+            <span id="lettercounter" class="input-group-text bg-transparent text-muted"><span id="counter">0</span>/300</span>
         </div>
         <div class="mb-3">
             <textarea class="form-control" rows="6" placeholder="Text (optional)" name="text"></textarea>

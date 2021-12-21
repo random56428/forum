@@ -11,9 +11,46 @@
     .a-block:hover {
         z-index: 1;
         border: 1px solid rgba(0, 0, 0, 0.7) !important;
-        cursor: pointer;
+    }
+
+    .nav-link.active {
+        color: rgb(0, 121, 211) !important;
+        margin-bottom: -6px;
+        border-bottom: 3px solid rgb(0, 121, 211) !important;
+    }
+
+    .nav-link:hover {
+        color: rgb(0, 121, 211) !important;
+    }
+
+    .profile-link,
+    .post-link {
+        text-decoration: none;
+    }
+
+    .profile-link:hover {
+        text-decoration: underline;
+    }
+
+    .black-text,
+    .black-text:hover {
+        color: black;
     }
 </style>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+        $(".profile-link").on("click", function (event) {
+            event.stopPropagation();
+        })
+
+        $(".post-link").on("click", function (event) {
+            event.stopPropagation();
+        })
+    })
+</script>
 {% endblock %}
 
 {% block profilenavbar %}
@@ -32,26 +69,51 @@
 
 <div>
     {% if comments %}
-    <div class="a-block bg-white p-2 text-break border" style="font-size: 11px;">
-        {{user}} <span class="text-muted">commented on {{ comments[0]["title"] }} &#183; Posted by
-            {% if comments[0]["active"] == 1 %} {{comments[0]["username"]}} {% else %} [deleted] {% endif %}</span>
+    <div class="a-block bg-white p-2 text-break border" style="font-size: 11px;"
+        onclick="window.location = `{{url_for('post', id=comments[0]['post_id'])}}`">
+        <a class="profile-link" href="{{url_for('profile', user=user)}}">{{user}}</a>
+        <span class="text-muted">commented on
+            <a class="post-link black-text text-muted" href="{{url_for('post', id=comments[0]['post_id'])}}">{{
+                comments[0]["title"] }}</a>
+            &#183; Posted by
+            {% if comments[0]["active"] == 1 %}
+            <a class="profile-link text-muted" href="{{url_for('profile', user=comments[0]['username'])}}">
+                {{comments[0]["username"]}}
+            </a>
+            {% else %}
+            [deleted]
+            {% endif %}
+        </span>
     </div>
     {% set ns = namespace(match=comments[0]["title"]) %}
     {% endif %}
     {% for comment in comments %}
     {% if ns.match != comment["title"] %}
-    <div class="a-block bg-white p-2 text-break border mt-1" style="font-size: 11px;">
-        {{user}} <span class="text-muted">commented on {{ comment["title"] }} &#183; Posted by
-            {% if comment["active"] == 1 %} {{comment["username"]}} {% else %} [deleted] {% endif %}</span>
+    <div class="a-block bg-white p-2 text-break border mt-1" style="font-size: 11px;"
+        onclick="window.location = `{{url_for('post', id=comment['post_id'])}}`">
+        <a class="profile-link" href="{{url_for('profile', user=user)}}">{{user}}</a>
+        <span class="text-muted">commented on
+            <a class="post-link black-text text-muted" href="{{url_for('post', id=comment['post_id'])}}">{{
+                comment["title"] }}</a> &#183; Posted by
+            {% if comment["active"] == 1 %}
+            <a class="profile-link text-muted" href="{{url_for('profile', user=comment['username'])}}">
+                {{comment["username"]}}
+            </a>
+            {% else %}
+            [deleted]
+            {% endif %}
+        </span>
     </div>
     {% set ns.match = comment["title"] %}
     {% endif %}
-    <div class="a-block bg-white p-2 text-break border">
+    <div class="a-block bg-white p-2 text-break border"
+        onclick="window.location = `{{url_for('post', id=comment['post_id'], scroll=comment['comment_id'])}}`">
         <div class="row">
             <div class="d-md-block d-none" style="width: 30px;"></div>
             <div class="col">
                 <div style="font-size: 10.5px;">
-                    {{user}} {% if user == comment["username"] %} <span class="text-primary fw-bold">OP</span>
+                    <a class="profile-link black-text" href="{{url_for('profile', user=user)}}">{{user}}</a>
+                    {% if user == comment["username"] %} <span class="text-primary fw-bold">OP</span>
                     {% endif%} <span class="text-muted">{{ comment["votes"] }} points &#183;
                         {{moment(comment["date"]).fromNow() }}</span>
                 </div>
