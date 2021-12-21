@@ -13,7 +13,7 @@ from temphelpers import login_required
 
 # https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/
 # Configure constants for file uploading
-UPLOAD_FOLDER = './static/images/profiles'
+UPLOAD_FOLDER = './static/img/profiles'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 # Configure application
@@ -49,15 +49,14 @@ moment = Moment(app)
 def inject_user():
     if "user_id" in session:
         user_info = (db.execute("SELECT username, pic FROM users WHERE id=?", session["user_id"]))[0]
-        user_info["pic"] = "/static/images/profiles/" + user_info["pic"]
+        user_info["pic"] = "/static/img/profiles/" + user_info["pic"]
         return user_info
     return dict()
 
 @app.route("/")
 @login_required
 def index():
-    # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-    posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.post_id DESC", session["user_id"])
+    posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.date DESC", session["user_id"])
 
     # Convert datetime string back to datetime obj
     parseAllToDatetimeObj(posts)
@@ -230,7 +229,7 @@ def post(id, scroll = None):
         return redirect("/")
 
     parseAllToDatetimeObj(posts)
-    comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ?", session["user_id"], id)
+    comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ? ORDER BY comments.date DESC", session["user_id"], id)
     parseAllToDatetimeObj(comments)
     
     # https://stackoverflow.com/questions/31863582/automatically-scroll-to-a-div-when-flask-returns-rendered-template
@@ -269,10 +268,6 @@ def newcomment():
     # Upvote own comment
     db.execute("INSERT INTO comment_votes (user_id, comment_id, vote) VALUES (?, ?, 1)", session["user_id"], comment_id)
 
-    # Query for person who commented to be returned
-    username = db.execute("SELECT username FROM users WHERE id=?", session["user_id"])
-    textarea["username"] = username[0]["username"]
-
     # Query for person who posted the post to be returned
     textarea["username_op"] = (db.execute("SELECT username FROM users JOIN posts ON posts.user_id=users.id WHERE posts.post_id=?", textarea["post_id"]))[0]["username"]
 
@@ -300,21 +295,18 @@ def profile(user):
     user_id = user_info[0]["id"]
 
     if request.endpoint == "profile-posts":
-        # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-        posts = db.execute(" SELECT posts.post_id, votes, title, date, vote FROM posts LEFT JOIN post_votes ON post_votes.post_id=posts.post_id WHERE posts.user_id=? ORDER BY posts.post_id DESC", user_id)
+        posts = db.execute("SELECT posts.post_id, votes, title, date, vote FROM posts JOIN post_votes ON post_votes.post_id=posts.post_id WHERE posts.user_id=? AND post_votes.user_id=? ORDER BY posts.date DESC", user_id, user_id)
         parseAllToDatetimeObj(posts)
         return render_template("profileposts.html", posts=posts, user=user)
     elif request.endpoint == "profile-comments":
-        # TODO: Currently sorted by newest, add dropdown to sort any newest, oldest, top voted, less voted
-        # DEMO: SELECT comments.*, posts.title, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = 1 ORDER BY comment_id DESC;
-        comments = db.execute("SELECT comments.*, posts.title, posts.post_id, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comment_id DESC", user_id)
+        comments = db.execute("SELECT comments.*, posts.title, posts.post_id, users.username, users.active FROM comments JOIN posts ON posts.post_id=comments.refpost_id JOIN users ON posts.user_id=users.id WHERE comments.refuser_id = ? ORDER BY comments.date DESC", user_id)
         parseAllToDatetimeObj(comments)
         return render_template("profilecomments.html", comments=comments, user=user)
 
     # Endpoint is user - overview
 
     # Get profile picture
-    pic = "/static/images/profiles/" + user_info[0]["pic"]
+    pic = "/static/img/profiles/" + user_info[0]["pic"]
 
     # Calculate total reputation for given user
     post_votes = db.execute("SELECT votes FROM posts WHERE user_id=?", user_id)
@@ -342,7 +334,7 @@ def profile(user):
 def settings():
 
     # Query for profile picture of logged in user
-    pic = "/static/images/profiles/" + (db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"]
+    pic = "/static/img/profiles/" + (db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"]
 
     return render_template("settings.html", picture=pic)
 
@@ -383,6 +375,11 @@ def deactivateaccount():
 
     user_id = session["user_id"]
 
+    # Check if entered username matches session username
+    if request.form.get("confirmation") != (db.execute("SELECT username FROM users WHERE id=?", user_id))[0]["username"]:
+        flash("Confirmation username is invalid.", "danger")
+        return redirect("/settings")
+
     db.execute("UPDATE users SET active=0 WHERE id=?", user_id)
 
     session.clear()
@@ -422,7 +419,7 @@ def uploadpic():
     file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
     # Get new profile picture link
-    newpic = "/static/images/profiles/" + filename
+    newpic = "/static/img/profiles/" + filename
 
     return jsonify(dict(msg = "", status="success", newpic=newpic))
 
@@ -434,7 +431,7 @@ def removepic():
     if ((db.execute("SELECT pic FROM users WHERE id=?", session["user_id"]))[0]["pic"] == "default.jpg"):
         return ""
     db.execute("UPDATE users SET pic='default.jpg' WHERE id=?", session["user_id"])
-    return "/static/images/profiles/default.jpg"
+    return "/static/img/profiles/default.jpg"
 
 # Upvote post or comment
 @app.route("/upvote", methods=["POST"])
@@ -458,7 +455,8 @@ def upvote():
     else:
         if len(db.execute("SELECT * FROM comments WHERE comment_id=?", info["id"])) == 0:
             return jsonify(dict(status = "error"))
-
+    
+    db.execute("BEGIN TRANSACTION")
     # Check for whether a post or comment is upvoted
     if info["type"] == "post":
         isUnvote = upvotePost(info)
@@ -468,7 +466,7 @@ def upvote():
     else:
         isUnvote = upvoteComment(info)
         votes = (db.execute("SELECT votes FROM comments WHERE comment_id=?", info["id"]))[0]["votes"]
-    
+    db.execute("COMMIT")
     return jsonify(dict(status = "success", votes = votes, unvote = isUnvote, id=info["id"]))
 
 # Downvote post or comment
@@ -493,7 +491,7 @@ def downvote():
     else:
         if len(db.execute("SELECT * FROM comments WHERE comment_id=?", info["id"])) == 0:
             return jsonify(dict(status = "error"))
-
+    db.execute("BEGIN TRANSACTION")
     # Check for whether a post or comment is downvoted
     if info["type"] == "post":
         isUnvote = downvotePost(info)
@@ -501,7 +499,7 @@ def downvote():
     else:
         isUnvote = downvoteComment(info)
         votes = (db.execute("SELECT votes FROM comments WHERE comment_id=?", info["id"]))[0]["votes"]
-    
+    db.execute("COMMIT")
     return jsonify(dict(status = "success", votes = votes, unvote = isUnvote, id=info["id"]))
 
 # Upvote post

@@ -1,0 +1,62 @@
+.a-post {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.a-post:hover {
+    border: 1px solid rgba(0, 0, 0, 0.7);
+}
+
+#votebox {
+    display: flex;
+    flex-direction: column;
+}
+
+.upvote,
+.downvote {
+    padding: 0;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.upvote:hover,
+.downvote:hover {
+    background: rgb(232, 232, 232);
+}
+
+.upvote-color {
+    color: rgb(255, 69, 0) !important;
+}
+
+.downvote-color {
+    color: rgb(113, 147, 255) !important;
+}
+
+.maxwidth-md {
+    max-width: 55px;
+}
+
+@media screen and (max-width: 768px) {
+    #votebox {
+        flex-direction: row;
+    }
+
+    .maxwidth-md {
+        max-width: none;
+    }
+}
+
+.profile-link,
+.pic-link {
+    text-decoration: none;
+}
+
+.profile-link:hover {
+    text-decoration: underline;
+}
+
+.black-text,
+.black-text:hover {
+    color: black;
+}

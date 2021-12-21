@@ -1,0 +1,71 @@
+.a-post {
+    margin-top: -1px;
+    position: relative;
+    border: 0.5px solid rgba(0, 0, 0, 0.3);
+}
+
+.a-post:hover {
+    z-index: 1;
+    border: 1px solid rgba(0, 0, 0, 0.7) !important;
+    cursor: pointer;
+}
+
+
+#votebox {
+    display: flex;
+    flex-direction: column;
+}
+
+.upvote,
+.downvote {
+    padding: 0;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.upvote:hover,
+.downvote:hover {
+    background: rgb(232, 232, 232);
+}
+
+.upvote-color {
+    color: rgb(255, 69, 0) !important;
+}
+
+.downvote-color {
+    color: rgb(113, 147, 255) !important;
+}
+
+.maxwidth-md {
+    max-width: 55px;
+}
+
+@media screen and (max-width: 768px) {
+    #votebox {
+        flex-direction: row;
+    }
+
+    .maxwidth-md {
+        max-width: none;
+    }
+}
+
+.nav-link.active {
+    color: rgb(0, 121, 211) !important;
+    margin-bottom: -6px;
+    border-bottom: 3px solid rgb(0, 121, 211) !important;
+}
+
+.nav-link:hover {
+    color: rgb(0, 121, 211) !important;
+}
+
+.profile-link {
+    text-decoration: none;
+}
+
+.profile-link:hover {
+    text-decoration: underline;
+}

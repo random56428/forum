@@ -1,0 +1,9 @@
+#titleform:focus+#lettercounter {
+    border-color: #000000;
+    box-shadow: none;
+    animation-delay: 0ms;
+}
+
+#lettercounter {
+    font-size: 10px;
+}

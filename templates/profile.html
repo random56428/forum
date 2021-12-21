@@ -1,29 +1,7 @@
 {% extends "layout.html" %}
 
 {% block style %}
-<style>
-    .nav-link.active {
-        color: rgb(0, 121, 211) !important;
-        margin-bottom: -6px;
-        border-bottom: 3px solid rgb(0, 121, 211) !important;
-    }
-
-    .nav-link:hover {
-        color: rgb(0, 121, 211) !important;
-    }
-
-    .profile-container {
-        border: 1px solid rgba(0, 0, 0, 0.3);
-    }
-
-    .profile-container:hover {
-        border: 1px solid rgba(0, 0, 0, 0.7);
-    }
-
-    .stat-type {
-        font-size: 14px;
-    }
-</style>
+<link rel="stylesheet" href="{{url_for('static', filename='css/profile.css')}}">
 {% endblock %}
 
 {% block profilenavbar %}

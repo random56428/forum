@@ -1,56 +1,11 @@
 {% extends "layout.html" %}
 
 {% block style %}
-<style>
-    .a-block {
-        margin-top: -1px;
-        position: relative;
-        border: 0.5px solid rgba(0, 0, 0, 0.3);
-    }
-
-    .a-block:hover {
-        z-index: 1;
-        border: 1px solid rgba(0, 0, 0, 0.7) !important;
-    }
-
-    .nav-link.active {
-        color: rgb(0, 121, 211) !important;
-        margin-bottom: -6px;
-        border-bottom: 3px solid rgb(0, 121, 211) !important;
-    }
-
-    .nav-link:hover {
-        color: rgb(0, 121, 211) !important;
-    }
-
-    .profile-link,
-    .post-link {
-        text-decoration: none;
-    }
-
-    .profile-link:hover {
-        text-decoration: underline;
-    }
-
-    .black-text,
-    .black-text:hover {
-        color: black;
-    }
-</style>
+<link rel="stylesheet" href="{{url_for('static', filename='css/profilecomments.css')}}">
 {% endblock %}
 
 {% block script %}
-<script>
-    $(document).ready(function () {
-        $(".profile-link").on("click", function (event) {
-            event.stopPropagation();
-        })
-
-        $(".post-link").on("click", function (event) {
-            event.stopPropagation();
-        })
-    })
-</script>
+<script href="{{url_for('static', filename='js/profilecomments.js')}}"></script>
 {% endblock %}
 
 {% block profilenavbar %}

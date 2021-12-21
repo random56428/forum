@@ -1,0 +1,21 @@
+hr {
+    opacity: 0.1;
+}
+
+.headings {
+    font-size: 10px;
+    margin-bottom: -12px;
+}
+
+.content {
+    margin-bottom: 1rem;
+}
+
+/* https://stackoverflow.com/questions/19571955/how-to-make-modal-dialog-with-blur-background-using-twitter-bootstrap */
+.modal-open .content-container {
+    -webkit-filter: blur(1px);
+    -moz-filter: blur(1px);
+    -o-filter: blur(1px);
+    -ms-filter: blur(1px);
+    filter: blur(1px);
+}

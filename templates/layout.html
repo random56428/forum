@@ -16,54 +16,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
         integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/layout.css')}}">
 
     <title>Forum</title>
 
     <!--Part of flask_moment to display datetime-->
     {{ moment.include_moment() }}
 
-    <style>
-        * {
-            font-family: Verdana, Arial, Helvetica, sans-serif;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        .form-control:focus {
-            border-color: #000000;
-            box-shadow: none;
-        }
-
-        .btn:focus {
-            border-color: none;
-            box-shadow: none;
-        }
-
-        .navbar-btn {
-            background-color: rgba(0, 0, 0, 0);
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            transition: 0.2s;
-        }
-
-        .navbar-btn:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .dropdown-menu,
-        .dropdown-divider {
-            padding: 0;
-            margin: 0;
-        }
-
-        .dropdown-item {
-            font-size: 15px;
-        }
-    </style>
-
     {% block style %}{% endblock %}
-
+    
 </head>
 
 <body style="background-color: #dae0e6;">
@@ -82,7 +43,6 @@
                     </div>
                 </div>
                 {% else %}
-                <!-- <a class="btn px-3 navbar-btn" role="button" href="{{url_for('logout')}}">Logout</a> -->
                 <div class="navbar-nav dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">

@@ -1,29 +1,11 @@
 {% extends "layout.html" %}
 
 {% block style %}
-<style>
-    #titleform:focus+#lettercounter {
-        border-color: #000000;
-        box-shadow: none;
-        animation-delay: 0ms;
-    }
-
-    #lettercounter {
-        font-size: 10px;
-    }
-</style>
+<link rel="stylesheet" href="{{url_for('static', filename='css/newpost.css')}}">
 {% endblock %}
 
 {% block script %}
-<script>
-    $(document).ready(function () {
-        counter = $("#counter");
-        
-        $("#titleform").on("keyup keydown", function () {
-            counter.text($(this).val().length);
-        });
-    })
-</script>
+<script src="{{url_for('static', filename='js/newpost.js')}}"></script>
 {% endblock %}
 
 {% block main %}
