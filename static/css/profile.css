@@ -8,14 +8,6 @@
     color: rgb(0, 121, 211) !important;
 }
 
-.profile-container {
-    border: 1px solid rgba(0, 0, 0, 0.3);
-}
-
-.profile-container:hover {
-    border: 1px solid rgba(0, 0, 0, 0.7);
-}
-
 .stat-type {
     font-size: 14px;
 }

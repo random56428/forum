@@ -136,7 +136,6 @@ function resetPassForm() {
     showConfirmPass();
 }
 
-// TODO: Refactor these "show" functions - duplication - parameterize
 function showOldPass() {
     var passwordInputs = document.querySelector("#oldpass");
     var element = document.querySelector("#oldpassicon");

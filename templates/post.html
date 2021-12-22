@@ -102,12 +102,36 @@
             <div class="col-md-1"></div>
         </div>
         <div class="col">
-            <textarea id="commentarea" class="form-control form-control-sm my-4" rows="5"
+            <textarea id="commentarea" class="form-control form-control-sm my-2 my-md-4" rows="5"
                 placeholder="Place your comments here!" name="PLACEHOLDER"></textarea>
             <button id="commentbtn" class="btn btn-outline-secondary btn-sm" disabled>
                 <span class="spinner-border spinner-border-sm visually-hidden" role="status" aria-hidden="true"></span>
                 <span class="btn-text">Comment</span>
             </button>
+        </div>
+        <div class="maxwidth-md">
+            <div class="col-md-1"></div>
+        </div>
+    </div>
+    <div class="row pt-3">
+        <div class="maxwidth-md">
+            <div class="col-md-1"></div>
+        </div>
+        <div class="col">
+            <div class="sort-headings dropdown">
+                <a class="dropdown-text btn btn-sm dropdown-toggle fw-bold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sort By: {% if sort == "new" %}New{% else %}Top{% endif %}
+                </a>
+                <ul class="shadow-sm dropdown-menu">
+                    {% if sort == "new" %}
+                    <li><a class="dropdown-option dropdown-item active-item" href="#">New</a></li>
+                    <li><a class="dropdown-option dropdown-item text-muted" href="{{url_for('post', id=curr_post_id, sort='top')}}">Top</a></li>
+                    {% else %}
+                    <li><a class="dropdown-option dropdown-item text-muted" href="{{url_for('post', id=curr_post_id, sort='new')}}">New</a></li>
+                    <li><a class="dropdown-option dropdown-item active-item" href="#">Top</a></li>
+                    {% endif %}
+                </ul>
+            </div>
             <hr>
         </div>
         <div class="maxwidth-md">

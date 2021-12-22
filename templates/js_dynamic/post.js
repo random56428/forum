@@ -34,13 +34,11 @@ $(document).ready(function () {
         }
     })
 
-    // TODO: REFACTOR - SAME SCRIPT AS INDEX
     $(".upvotepost").on("click", function (event) {
         var id = $(event.currentTarget).prop("id");
         upvote(id, "post");
     })
 
-    // TODO: REFACTOR - SAME SCRIPT AS INDEX
     $(".downvotepost").on("click", function (event) {
         var id = $(event.currentTarget).prop("id");
         downvote(id, "post");
@@ -57,7 +55,6 @@ $(document).ready(function () {
     })
 })
 
-// TODO: REFACTOR - SAME SCRIPT AS INDEX
 function upvote(id, type) {
     $.ajax({
         type: "POST",
@@ -90,7 +87,6 @@ function upvote(id, type) {
     })
 }
 
-// TODO: REFACTOR - SAME SCRIPT AS INDEX
 function downvote(id, type) {
     $.ajax({
         type: "POST",
@@ -155,7 +151,6 @@ function downvoteComment(id, data) {
     $("#commenticon-" + id).text(data["votes"]);
 }
 
-// TODO: REFACTOR - SAME SCRIPT AS INDEX
 function renderNovotesComment(id, data) {
     $("#commentdownvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("downvote-color");
     $("#commentupvote-".concat(id).concat(" ,", "#commenticon-" + id)).removeClass("upvote-color");

@@ -14,6 +14,16 @@
 
 <a role="button" class="container btn btn-primary mb-3 btn-sm" href="{{url_for('newpost')}}">Create Post</a>
 
+<div class="sort-container bg-white mb-3 p-2">
+    {% if sort == "new" %}
+    <a href="#" role="button" class="btn btn-sm rounded-pill fw-bold text-muted active">New</a>
+    <a href="{{url_for('index', sort='top')}}" role="button" class="btn btn-sm rounded-pill fw-bold text-muted">Top</a>
+    {% else %}
+    <a href="{{url_for('index', sort='new')}}" role="button" class="btn btn-sm rounded-pill fw-bold text-muted">New</a>
+    <a href="#" role="button" class="btn btn-sm rounded-pill fw-bold text-muted active">Top</a>
+    {% endif %}
+</div>
+
 {% for post in posts %}
 {% if post["active"] == 1 %}
 <div class="bg-white p-2 mb-2 rounded a-post" onclick="window.location = `{{url_for('post', id=post['post_id'])}}`">

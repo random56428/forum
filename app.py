@@ -54,14 +54,24 @@ def inject_user():
     return dict()
 
 @app.route("/")
+@app.route("/<sort>")
 @login_required
-def index():
-    posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.date DESC", session["user_id"])
+def index(sort="new"):
+
+    # Check if sort does not exist
+    if sort not in ["new", "top"]:
+        flash("Invalid path.", "danger")
+        return redirect("/")
+
+    if sort == "new":
+        posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.date DESC", session["user_id"])
+    else:
+        posts = db.execute("SELECT posts.post_id, content, votes, title, username, date, active, vote FROM posts JOIN users ON users.id = posts.user_id LEFT JOIN post_votes ON post_votes.post_id=posts.post_id AND post_votes.user_id=? ORDER BY posts.votes DESC", session["user_id"])
 
     # Convert datetime string back to datetime obj
     parseAllToDatetimeObj(posts)
 
-    return render_template("index.html", posts=posts)
+    return render_template("index.html", posts=posts, sort=sort)
 
 @app.route("/login", methods = ["GET", "POST"])
 def login():
@@ -209,8 +219,14 @@ def newpost():
 
 @app.route("/post/<id>")
 @app.route("/post/<id>/<scroll>")
+@app.route("/post/<id>/<sort>")
 @login_required
-def post(id, scroll = None):
+def post(id, scroll = None, sort = "new"):
+    # Check if sort does not exist
+    if sort not in ["new", "top"]:
+        flash("Invalid path.", "danger")
+        return redirect("/")
+
     # Check if scroll comment exists
     if scroll and len(db.execute("SELECT comment_id FROM comments WHERE comment_id=?", scroll)) == 0:
         flash("Comment does not exist.", "danger")
@@ -229,15 +245,18 @@ def post(id, scroll = None):
         return redirect("/")
 
     parseAllToDatetimeObj(posts)
-    comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ? ORDER BY comments.date DESC", session["user_id"], id)
+    if sort == "new":
+        comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ? ORDER BY comments.date DESC", session["user_id"], id)
+    else:
+        comments = db.execute("SELECT comments.*, users.username, users.active, users.pic, vote FROM comments JOIN users ON users.id = comments.refuser_id LEFT JOIN comment_votes ON comment_votes.comment_id=comments.comment_id AND comment_votes.user_id=? WHERE refpost_id = ? ORDER BY comments.votes DESC", session["user_id"], id)
     parseAllToDatetimeObj(comments)
     
     # https://stackoverflow.com/questions/31863582/automatically-scroll-to-a-div-when-flask-returns-rendered-template
     # If scroll endpoint is defined, scroll to comment
     if scroll:
-        return render_template("post.html", posts=posts, comments=comments, scroll=("#comment-" + scroll))
+        return render_template("post.html", posts=posts, comments=comments, scroll=("#comment-" + scroll), sort=sort, curr_post_id=id)
 
-    return render_template("post.html", posts=posts, comments=comments)
+    return render_template("post.html", posts=posts, comments=comments, sort=sort, curr_post_id=id)
 
 @app.route("/newcomment", methods=["POST"])
 @login_required
@@ -440,7 +459,7 @@ def upvote():
     info = request.json
 
     # Check if request is modified
-    if len(info) != 2 or (info["type"].lower() not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
+    if len(info) != 2 or (info["type"] not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
         return jsonify(dict(status = "error"))
     # Continue checking
     if "-" not in info["id"] or len(info["id"].split("-")) != 2 or not any(c.isdigit() for c in info["id"].rsplit("-")[1]):
@@ -476,7 +495,7 @@ def downvote():
     info = request.json
     
     # Check if request is modified
-    if len(info) != 2 or (info["type"].lower() not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
+    if len(info) != 2 or (info["type"] not in ["post", "comment"]) or not any(c.isdigit() for c in info["id"]):
         return jsonify(dict(status = "error"))
     # Continue checking
     if "-" not in info["id"] or len(info["id"].split("-")) != 2 or not any(c.isdigit() for c in info["id"].rsplit("-")[1]):

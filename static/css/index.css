@@ -1,4 +1,4 @@
-.a-post {
+.a-post, .sort-container {
     border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
@@ -54,4 +54,17 @@
 
 .profile-link:hover {
     text-decoration: underline;
+}
+
+.sort-container a {
+    width: 60px;
+}
+
+.sort-container a:hover {
+    background: rgb(237, 237, 237);
+}
+
+.active {
+    color: rgb(1, 73, 128) !important;
+    background: rgb(246, 247, 248);
 }
