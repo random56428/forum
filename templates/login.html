@@ -1,11 +1,20 @@
 {% extends "layout.html" %}
 
+{% block title %}
+<title>Log In - Forum</title>
+{% endblock %}
+
 {% block main %}
 
 <!--https://getbootstrap.com/docs/5.1/forms/floating-labels/-->
 <div class="row mx-1">
     <div class="col"></div>
     <div class="col-md-5 bg-white p-3 rounded">
+        <div class="row m-1 my-4">
+            <div class="col-12" style="text-align: center;">
+                <i class="fas fa-lock fa-2x"></i>
+            </div>
+        </div>
         <form action="{{url_for('login')}}" method="post">
             <div class="form-floating mb-3">
                 <input type="username" class="form-control" id="lusername" placeholder="Username" autocomplete="off"

@@ -9,7 +9,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
 from flask_moment import Moment
 
-from temphelpers import login_required
+from helpers import login_required
 
 # https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/
 # Configure constants for file uploading
@@ -222,6 +222,13 @@ def newpost():
 @app.route("/post/<id>/<sort>")
 @login_required
 def post(id, scroll = None, sort = "new"):
+
+    # Exception is thrown with 2 routes of same length
+    # sort is passed an int when we want scroll
+    if sort.isdigit() and scroll == None:
+        scroll = sort
+        sort = "new"
+    
     # Check if sort does not exist
     if sort not in ["new", "top"]:
         flash("Invalid path.", "danger")
@@ -663,5 +670,3 @@ def getSize(file):
 
     # File doesn't support seeking
     return 0
-
-    

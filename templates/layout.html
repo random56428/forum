@@ -18,7 +18,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{url_for('static', filename='css/layout.css')}}">
 
-    <title>Forum</title>
+    {% block title %}{% endblock %}
 
     <!--Part of flask_moment to display datetime-->
     {{ moment.include_moment() }}
@@ -46,7 +46,7 @@
                 <div class="navbar-nav dropdown">
                     <a class="dropdown-profile nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <img id="static-pic" src="{{ pic }}" class="img-fluid rounded-circle" style="width: 25px;">
+                        <img id="static-pic" src="{{ pic }}" class="img-fluid rounded-circle" style="width: 25px; height: 25px;">
                         <span style="font-size: 13px;">{{ username }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">

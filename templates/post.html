@@ -1,5 +1,13 @@
 {% extends "layout.html" %}
 
+{% block title %}
+<title>
+    {% for post in posts %}
+    {{ post["title"] }} - Forum
+    {% endfor %}
+</title>
+{% endblock %}
+
 {% block script %}
 <script>
     {% include "js_dynamic/post.js" %}
@@ -148,7 +156,7 @@
         <div class="col-md-1" style="max-width: 55px;">
             <a class="pic-link" href="{{url_for('profile', user=comment['username'])}}">
                 <img src="/static/img/profiles/{{comment['pic']}}" class="img-fluid rounded-circle"
-                    style="margin-top: 9px; position: relative; z-index: 1;"></a>
+                    style="margin-top: 9px; position: relative; z-index: 1; width: 31px; height: 31px;"></a>
         </div>
         <div class="col my-3 ps-0">
             <div style="font-size: 12px">

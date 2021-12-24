@@ -172,7 +172,7 @@ function hideToast() {
 function sendRequestAddComment() {
     // https://stackoverflow.com/questions/3730359/get-id-from-url-with-jquery
     var url = window.location.pathname;
-    var id = url.substring(url.lastIndexOf('/') + 1);
+    var id = url.split('/')[2];
     $.ajax({
         type: "POST",
         url: "{{url_for('newcomment')}}",
@@ -201,15 +201,13 @@ function sendRequestAddComment() {
                 function isOP() {
                     return (`{{ username }}` == data["username_op"] ? true : false);
                 }
-                console.log(data);
-                console.log(data['pic']);
 
                 // Insert comment into html
                 var str = ` <div class="row" style="margin-left: -3px; margin-right: -3px;">
                                 <div class="col-md-1" style="max-width: 55px;">
                                     <a class="pic-link" href="{{url_for('profile', user=username)}}">
                                     <img src="{{pic}}" class="img-fluid rounded-circle"
-                                        style="margin-top: 9px; position: relative; z-index: 1; width: 31px;"></a>
+                                        style="margin-top: 9px; position: relative; z-index: 1; width: 31px; height: 31px;"></a>
                                 </div>
                                 <div class="col my-3 ps-0">
                                     <div style="font-size: 12px">
